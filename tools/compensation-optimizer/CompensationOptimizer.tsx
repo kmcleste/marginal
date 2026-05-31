@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { applyBrackets, marginalRate, FEDERAL_2024, LIMITS_2024 } from "@marginal/math";
 import { colors as T, fonts } from "@marginal/theme";
 import statesRaw from "../../shared/tax-data/2024/states.json";
@@ -511,13 +511,6 @@ export default function CompensationOptimizer() {
   const [sweepParam, setSweepParam] = useState<SweepKey>("k401");
   const [optimized,  setOptimized]  = useState<ReturnType<typeof optimize> | null>(null);
   const [isRunning,  setIsRunning]  = useState(false);
-  const [mob, setMob] = useState(false);
-  useEffect(() => {
-    const check = () => setMob(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   const gross          = base + base * (aipPct / 100);
   const bonusGross     = base * (aipPct / 100);
@@ -669,44 +662,42 @@ export default function CompensationOptimizer() {
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: sans }}>
 
       {/* ── HEADER ── */}
-      <div style={{ background: `linear-gradient(180deg, #0a0f1e 0%, ${C.bg} 100%)`, borderBottom: `1px solid ${C.border}`, padding: mob ? "12px 14px 10px" : "18px 24px 14px" }}>
-        <div style={{ display: "flex", flexDirection: mob ? "column" : "row", justifyContent: "space-between", alignItems: mob ? "flex-start" : "flex-start", gap: mob ? 10 : 12 }}>
+      <div className="co-header-pad" style={{ background: `linear-gradient(180deg, #0a0f1e 0%, ${C.bg} 100%)`, borderBottom: `1px solid ${C.border}` }}>
+        <div className="co-header-row">
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <span style={{ fontSize: mob ? 14 : 17, fontWeight: 700, fontFamily: mono, color: C.accent, letterSpacing: "0.03em" }}>
+              <span style={{ fontSize: 17, fontWeight: 700, fontFamily: mono, color: C.accent, letterSpacing: "0.03em" }}>
                 COMPENSATION OPTIMIZER
               </span>
               <Tag color={C.gold}>{stateName.toUpperCase()} · 2024</Tag>
-              {!mob && <Tag color={C.blue}>COORDINATE DESCENT</Tag>}
+              <span className="co-mob-hide"><Tag color={C.blue}>COORDINATE DESCENT</Tag></span>
             </div>
-            {!mob && (
-              <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, marginTop: 3 }}>
-                Objective: maximize utility(net_pay, match_capture, tax_alpha, retirement_PV) subject to IRS + liquidity constraints
-              </div>
-            )}
+            <div className="co-mob-hide" style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, marginTop: 3 }}>
+              Objective: maximize utility(net_pay, match_capture, tax_alpha, retirement_PV) subject to IRS + liquidity constraints
+            </div>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 0, alignSelf: mob ? "stretch" : "flex-start" }}>
+          <div className="co-kpi-row">
             {(spouseEnabled || fixedCostAnnual > 0 ? [
-              { label: "HH Gross",   val: fmt(gross + spouseGrossTotal),      c: C.text },
-              { label: "HH Net",     val: fmt(current.householdNet),           c: C.accent },
-              { label: "Fixed/mo",   val: fmt(fixedCostMonthly),              c: C.orange },
-              { label: "Discretion", val: fmt(current.discretionary),          c: C.gold },
-              { label: "Utility",    val: fmtK(current.utility),              c: C.blue },
+              { label: "HH Gross",   val: fmt(gross + spouseGrossTotal),  c: C.text },
+              { label: "HH Net",     val: fmt(current.householdNet),      c: C.accent },
+              { label: "Fixed/mo",   val: fmt(fixedCostMonthly),          c: C.orange },
+              { label: "Discretion", val: fmt(current.discretionary),     c: C.gold },
+              { label: "Utility",    val: fmtK(current.utility),          c: C.blue },
             ] : [
-              { label: "Gross",    val: fmt(gross),              c: C.text },
-              { label: "Net/yr",   val: fmt(current.net),        c: C.accent },
-              { label: "Match/yr", val: fmt(matchAmt),           c: C.gold },
-              { label: "Utility",  val: fmtK(current.utility),   c: C.blue },
+              { label: "Gross",    val: fmt(gross),            c: C.text },
+              { label: "Net/yr",   val: fmt(current.net),      c: C.accent },
+              { label: "Match/yr", val: fmt(matchAmt),         c: C.gold },
+              { label: "Utility",  val: fmtK(current.utility), c: C.blue },
             ]).map((x, i) => (
               <div key={x.label} style={{
                 textAlign: "right",
-                paddingLeft: mob ? 12 : 20, paddingRight: 4,
-                paddingTop: mob ? 4 : 0,
+                paddingLeft: 16, paddingRight: 4, paddingTop: 4, paddingBottom: 4,
                 borderLeft: i > 0 ? `1px solid ${C.border}` : "none",
-                marginLeft: i > 0 ? (mob ? 2 : 4) : 0,
+                marginLeft: i > 0 ? 4 : 0,
+                minWidth: 0,
               }}>
-                <div style={{ fontSize: 9, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.06em" }}>{x.label}</div>
-                <div style={{ fontSize: mob ? 13 : 15, fontWeight: 700, color: x.c, fontFamily: mono }}>{x.val}</div>
+                <div style={{ fontSize: 9, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{x.label}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: x.c, fontFamily: mono, whiteSpace: "nowrap" }}>{x.val}</div>
               </div>
             ))}
           </div>
@@ -726,11 +717,11 @@ export default function CompensationOptimizer() {
         ))}
       </div>
 
-      <div style={{ padding: mob ? "12px 12px" : "20px 24px" }}>
+      <div className="co-content-pad">
 
         {/* ══ OPTIMIZER ══ */}
         {tab === "optimizer" && (
-          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
+          <div className="co-grid-2">
             <div>
               <Card style={{ marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -778,14 +769,22 @@ export default function CompensationOptimizer() {
                 <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
                   Utility Function Decomposition
                 </div>
-                <div style={{ fontSize: 11, color: C.textDim, fontFamily: mono, marginBottom: 14, lineHeight: 2, background: C.surfaceAlt, padding: "10px 14px", borderRadius: 6, borderLeft: `2px solid ${C.border}` }}>
-                  <span style={{ color: C.accent }}>U</span> = net_takehome<br />
-                  &nbsp;&nbsp;+ (k401+match) × <span style={{ color: C.blue }}>G</span><br />
-                  &nbsp;&nbsp;+ hsa × 1.3 × <span style={{ color: C.blue }}>G</span> &nbsp;<span style={{ color: C.muted }}>· triple tax</span><br />
-                  &nbsp;&nbsp;+ ira × 1.1 × <span style={{ color: C.purple }}>G</span> &nbsp;<span style={{ color: C.muted }}>· Roth</span><br />
-                  &nbsp;&nbsp;+ mega × 1.15 × <span style={{ color: C.purple }}>G</span><br />
-                  &nbsp;&nbsp;where <span style={{ color: C.blue }}>G</span> = (1+r)ⁿ/(1+d)ⁿ − 1 &nbsp;<span style={{ color: C.muted }}>· r={expectedReturn}% d={discountRate}% n={retireHorizon}</span><br />
-                  &nbsp;&nbsp;− <span style={{ color: C.red }}>penalty</span>(discretionary &lt; floor)
+                <div style={{ fontSize: 10, fontFamily: mono, marginBottom: 14, background: C.surfaceAlt, borderRadius: 6, borderLeft: `2px solid ${C.border}`, overflow: "hidden" }}>
+                  {[
+                    { lhs: <span><span style={{ color: C.accent }}>U</span></span>,    rhs: "net_takehome",             note: "" },
+                    { lhs: "+ 401k+match ×",                                            rhs: <span style={{ color: C.blue }}>G</span>,    note: "pre-tax growth" },
+                    { lhs: "+ hsa × 1.3 ×",                                             rhs: <span style={{ color: C.blue }}>G</span>,    note: "triple tax" },
+                    { lhs: "+ ira × 1.1 ×",                                             rhs: <span style={{ color: C.purple }}>G</span>,  note: "Roth" },
+                    { lhs: "+ mega × 1.15 ×",                                           rhs: <span style={{ color: C.purple }}>G</span>,  note: "" },
+                    { lhs: <span><span style={{ color: C.blue }}>G</span> =</span>,     rhs: `(1+r)ⁿ/(1+d)ⁿ−1`,       note: `r=${expectedReturn}% d=${discountRate}% n=${retireHorizon}` },
+                    { lhs: "−",                                                          rhs: <span style={{ color: C.red }}>penalty</span>, note: "discretionary < floor" },
+                  ].map((row, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", borderBottom: i < 6 ? `1px solid ${C.border}22` : "none" }}>
+                      <span style={{ color: C.textDim, minWidth: 100, flexShrink: 0 }}>{row.lhs}</span>
+                      <span style={{ color: C.text, flexShrink: 0 }}>{row.rhs}</span>
+                      {row.note && <span style={{ color: C.muted, fontSize: 9, marginLeft: "auto", textAlign: "right", whiteSpace: "nowrap" }}>{row.note}</span>}
+                    </div>
+                  ))}
                 </div>
                 {[
                   { label: spouseEnabled ? "Primary Net" : "Net Take-Home", val: current.net,             color: C.accent },
@@ -846,7 +845,7 @@ export default function CompensationOptimizer() {
                       Apply →
                     </button>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
                     {[
                       { label: "Utility Gain", val: fmtK(utilityGain), color: utilityGain >= 0 ? C.accent : C.red },
                       { label: "Net Δ", val: fmt(netGain), color: netGain >= 0 ? C.accent : C.orange },
@@ -898,7 +897,7 @@ export default function CompensationOptimizer() {
                 </button>
               ))}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
+            <div className="co-grid-2">
               {[
                 { title: `∂U/∂${sweepParam} — Utility vs. ${sweepParam}`, subtitle: "Shape reveals marginal return to each dollar contributed", valueKey: "utility", color: C.accent, label: "utility curve" },
                 { title: `Net Take-Home vs. ${sweepParam}`, subtitle: "Tradeoff: more contributions = less immediate cash", valueKey: "net", color: C.blue, label: "net pay" },
@@ -976,7 +975,7 @@ export default function CompensationOptimizer() {
 
         {/* ══ PAYCHECKS ══ */}
         {tab === "paycheck" && (
-          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
+          <div className="co-grid-2">
             <Card>
               <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
                 Regular {frequency} Paycheck
@@ -1091,7 +1090,7 @@ export default function CompensationOptimizer() {
 
         {/* ══ 401K MATCH ══ */}
         {tab === "match" && (
-          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
+          <div className="co-grid-2">
             <div>
               <Card style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
@@ -1258,7 +1257,7 @@ export default function CompensationOptimizer() {
           const gridVals = [0.25, 0.5, 0.75, 1.0].map(p => maxT * p);
 
           return (
-            <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "300px 1fr", gap: 16 }}>
+            <div className="co-grid-lt">
               {/* ── LEFT: Controls ── */}
               <div>
                 <Card style={{ marginBottom: 12 }}>
@@ -1360,7 +1359,7 @@ export default function CompensationOptimizer() {
                 </Card>
 
                 {/* Metrics grid */}
-                <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(3, 1fr)", gap: 12, marginBottom: 12 }}>
+                <div className="co-grid-3">
                   <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
                     <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.07em" }}>Portfolio at {retireAge}</div>
                     {scenarios.map(s => (
@@ -1389,7 +1388,7 @@ export default function CompensationOptimizer() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div className="co-grid-2b">
                   <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
                     <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 6, letterSpacing: "0.07em" }}>Sustainable Income (Base, 4% SWR)</div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: C.accent, fontFamily: mono, marginBottom: 6 }}>{fmt(basePortfolio * 0.04)}</div>
@@ -1452,7 +1451,7 @@ export default function CompensationOptimizer() {
 
         {/* ══ CONFIG ══ */}
         {tab === "config" && (
-          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
+          <div className="co-grid-2">
 
             {/* ── Left: income inputs → tax result ── */}
             <div>
@@ -1643,7 +1642,7 @@ export default function CompensationOptimizer() {
         )}
       </div>
 
-      <div style={{ padding: "0 24px 16px", fontSize: 10, color: C.muted, fontFamily: mono, lineHeight: 1.7 }}>
+      <div className="co-footer-pad" style={{ fontSize: 10, color: C.muted, fontFamily: mono, lineHeight: 1.7 }}>
         2024 federal brackets (IRS Rev. Proc. 2023-34) · {stateName} state tax · SS wage base {fmt(FEDERAL_2024.socialSecurity.wageBase)} ·
         Utility function uses coordinate descent over 401k/HSA/FSA/IRA/MegaBack parameters with PV of retirement contributions. ·
         Not financial or tax advice. Consult a CPA/CFP.

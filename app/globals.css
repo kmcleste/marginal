@@ -22,3 +22,31 @@ input[type="number"],
 input[type="text"].numeric {
   font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", monospace;
 }
+
+/* ── Compensation Optimizer responsive grid ─────────────────────── */
+
+.co-grid-2      { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.co-grid-lt     { display: grid; grid-template-columns: 300px 1fr; gap: 16px; }
+.co-grid-3      { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+.co-grid-2b     { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+.co-header-row  { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.co-kpi-row     { display: flex; flex-wrap: nowrap; }
+.co-mob-hide    { }
+.co-header-pad  { padding: 18px 24px 14px; }
+.co-content-pad { padding: 20px 24px; }
+.co-footer-pad  { padding: 0 24px 16px; }
+
+@media (max-width: 767px) {
+  .co-grid-2      { grid-template-columns: 1fr; }
+  .co-grid-lt     { grid-template-columns: 1fr; }
+  .co-grid-3      { grid-template-columns: 1fr 1fr; }
+  .co-grid-2b     { grid-template-columns: 1fr; }
+
+  .co-header-row  { flex-direction: column; gap: 8px; }
+  .co-kpi-row     { flex-wrap: wrap; gap: 0; }
+  .co-mob-hide    { display: none; }
+  .co-header-pad  { padding: 10px 14px 10px; }
+  .co-content-pad { padding: 12px 12px; }
+  .co-footer-pad  { padding: 0 12px 14px; }
+}
