@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { applyBrackets, marginalRate, FEDERAL_2024, LIMITS_2024 } from "@marginal/math";
 import { colors as T, fonts } from "@marginal/theme";
 import statesRaw from "../../shared/tax-data/2024/states.json";
@@ -511,6 +511,13 @@ export default function CompensationOptimizer() {
   const [sweepParam, setSweepParam] = useState<SweepKey>("k401");
   const [optimized,  setOptimized]  = useState<ReturnType<typeof optimize> | null>(null);
   const [isRunning,  setIsRunning]  = useState(false);
+  const [mob, setMob] = useState(false);
+  useEffect(() => {
+    const check = () => setMob(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const gross          = base + base * (aipPct / 100);
   const bonusGross     = base * (aipPct / 100);
@@ -662,21 +669,23 @@ export default function CompensationOptimizer() {
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: sans }}>
 
       {/* ── HEADER ── */}
-      <div style={{ background: `linear-gradient(180deg, #0a0f1e 0%, ${C.bg} 100%)`, borderBottom: `1px solid ${C.border}`, padding: "18px 24px 14px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+      <div style={{ background: `linear-gradient(180deg, #0a0f1e 0%, ${C.bg} 100%)`, borderBottom: `1px solid ${C.border}`, padding: mob ? "12px 14px 10px" : "18px 24px 14px" }}>
+        <div style={{ display: "flex", flexDirection: mob ? "column" : "row", justifyContent: "space-between", alignItems: mob ? "flex-start" : "flex-start", gap: mob ? 10 : 12 }}>
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 17, fontWeight: 700, fontFamily: mono, color: C.accent, letterSpacing: "0.03em" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: mob ? 14 : 17, fontWeight: 700, fontFamily: mono, color: C.accent, letterSpacing: "0.03em" }}>
                 COMPENSATION OPTIMIZER
               </span>
               <Tag color={C.gold}>{stateName.toUpperCase()} · 2024</Tag>
-              <Tag color={C.blue}>COORDINATE DESCENT</Tag>
+              {!mob && <Tag color={C.blue}>COORDINATE DESCENT</Tag>}
             </div>
-            <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, marginTop: 3 }}>
-              Objective: maximize utility(net_pay, match_capture, tax_alpha, retirement_PV) subject to IRS + liquidity constraints
-            </div>
+            {!mob && (
+              <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, marginTop: 3 }}>
+                Objective: maximize utility(net_pay, match_capture, tax_alpha, retirement_PV) subject to IRS + liquidity constraints
+              </div>
+            )}
           </div>
-          <div style={{ display: "flex", gap: 0 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 0, alignSelf: mob ? "stretch" : "flex-start" }}>
             {(spouseEnabled || fixedCostAnnual > 0 ? [
               { label: "HH Gross",   val: fmt(gross + spouseGrossTotal),      c: C.text },
               { label: "HH Net",     val: fmt(current.householdNet),           c: C.accent },
@@ -691,12 +700,13 @@ export default function CompensationOptimizer() {
             ]).map((x, i) => (
               <div key={x.label} style={{
                 textAlign: "right",
-                paddingLeft: 20, paddingRight: 4,
+                paddingLeft: mob ? 12 : 20, paddingRight: 4,
+                paddingTop: mob ? 4 : 0,
                 borderLeft: i > 0 ? `1px solid ${C.border}` : "none",
-                marginLeft: i > 0 ? 4 : 0,
+                marginLeft: i > 0 ? (mob ? 2 : 4) : 0,
               }}>
                 <div style={{ fontSize: 9, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.06em" }}>{x.label}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: x.c, fontFamily: mono }}>{x.val}</div>
+                <div style={{ fontSize: mob ? 13 : 15, fontWeight: 700, color: x.c, fontFamily: mono }}>{x.val}</div>
               </div>
             ))}
           </div>
@@ -716,11 +726,11 @@ export default function CompensationOptimizer() {
         ))}
       </div>
 
-      <div style={{ padding: "20px 24px" }}>
+      <div style={{ padding: mob ? "12px 12px" : "20px 24px" }}>
 
         {/* ══ OPTIMIZER ══ */}
         {tab === "optimizer" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
             <div>
               <Card style={{ marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -836,7 +846,7 @@ export default function CompensationOptimizer() {
                       Apply →
                     </button>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
                     {[
                       { label: "Utility Gain", val: fmtK(utilityGain), color: utilityGain >= 0 ? C.accent : C.red },
                       { label: "Net Δ", val: fmt(netGain), color: netGain >= 0 ? C.accent : C.orange },
@@ -888,7 +898,7 @@ export default function CompensationOptimizer() {
                 </button>
               ))}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
               {[
                 { title: `∂U/∂${sweepParam} — Utility vs. ${sweepParam}`, subtitle: "Shape reveals marginal return to each dollar contributed", valueKey: "utility", color: C.accent, label: "utility curve" },
                 { title: `Net Take-Home vs. ${sweepParam}`, subtitle: "Tradeoff: more contributions = less immediate cash", valueKey: "net", color: C.blue, label: "net pay" },
@@ -908,7 +918,7 @@ export default function CompensationOptimizer() {
                   <Card key={valueKey}>
                     <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>{title}</div>
                     <div style={{ fontSize: 10, color: C.muted, marginBottom: 12 }}>{subtitle}</div>
-                    <svg width={W} height={H + 20} style={{ display: "block", overflowX: "auto" }}>
+                    <svg width={W} height={H + 20} viewBox={`0 0 ${W} ${H + 20}`} style={{ display: "block", width: "100%", overflow: "visible" }}>
                       {[0.25, 0.5, 0.75, 1].map(p => (
                         <line key={p} x1={0} x2={W} y1={toY(lo + range * p)} y2={toY(lo + range * p)} stroke={C.border} strokeWidth={1} />
                       ))}
@@ -966,7 +976,7 @@ export default function CompensationOptimizer() {
 
         {/* ══ PAYCHECKS ══ */}
         {tab === "paycheck" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
             <Card>
               <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
                 Regular {frequency} Paycheck
@@ -1081,7 +1091,7 @@ export default function CompensationOptimizer() {
 
         {/* ══ 401K MATCH ══ */}
         {tab === "match" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
             <div>
               <Card style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
@@ -1248,7 +1258,7 @@ export default function CompensationOptimizer() {
           const gridVals = [0.25, 0.5, 0.75, 1.0].map(p => maxT * p);
 
           return (
-            <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "300px 1fr", gap: 16 }}>
               {/* ── LEFT: Controls ── */}
               <div>
                 <Card style={{ marginBottom: 12 }}>
@@ -1350,7 +1360,7 @@ export default function CompensationOptimizer() {
                 </Card>
 
                 {/* Metrics grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr 1fr" : "repeat(3, 1fr)", gap: 12, marginBottom: 12 }}>
                   <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
                     <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.07em" }}>Portfolio at {retireAge}</div>
                     {scenarios.map(s => (
@@ -1379,7 +1389,7 @@ export default function CompensationOptimizer() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 12, marginBottom: 12 }}>
                   <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
                     <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 6, letterSpacing: "0.07em" }}>Sustainable Income (Base, 4% SWR)</div>
                     <div style={{ fontSize: 20, fontWeight: 700, color: C.accent, fontFamily: mono, marginBottom: 6 }}>{fmt(basePortfolio * 0.04)}</div>
@@ -1442,7 +1452,7 @@ export default function CompensationOptimizer() {
 
         {/* ══ CONFIG ══ */}
         {tab === "config" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 16 }}>
 
             {/* ── Left: income inputs → tax result ── */}
             <div>
