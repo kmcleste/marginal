@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const tools = [
+const tools: Array<{ slug: string; name: string; description: string; status: "built" | "planned" }> = [
   {
     slug: "compensation-optimizer",
     name: "Compensation Optimizer",
@@ -12,22 +12,22 @@ const tools = [
     slug: "rsu-equity-modeler",
     name: "RSU / Equity Modeler",
     description:
-      "Vesting schedules, AMT on ISOs, 83(b) election modeling, concentration risk, and sell-to-cover vs. cash analysis.",
-    status: "planned" as const,
+      "Vesting schedules, sell-to-cover vs. hold analysis, tax at vest, and single-stock concentration risk with diversification schedule.",
+    status: "built" as const,
   },
   {
     slug: "mortgage-vs-invest",
     name: "Mortgage vs. Invest",
     description:
       "Extra principal paydown vs. market investment, PMI elimination, refi breakeven, and opportunity cost.",
-    status: "planned" as const,
+    status: "built" as const,
   },
   {
     slug: "fire-calculator",
     name: "FIRE Calculator",
     description:
       "FI number, coast-FI, safe withdrawal rate stress testing, and sequence-of-returns risk.",
-    status: "planned" as const,
+    status: "built" as const,
   },
 ];
 
