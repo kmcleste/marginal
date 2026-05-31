@@ -1,0 +1,78 @@
+name: Tax Data Pipeline
+
+on:
+  schedule:
+    # Runs mid-January each year (brackets for the new year are typically published by then)
+    - cron: "0 9 15 1 *"
+  workflow_dispatch:
+    inputs:
+      states:
+        description: "Comma-separated state codes to update (e.g. CA,NY,TX). Leave blank for all."
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run — extract and validate but do not open a PR"
+        required: false
+        default: "false"
+
+jobs:
+  update-tax-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline dependencies
+        run: |
+          cd pipeline
+          pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: |
+          cd pipeline
+          playwright install chromium --with-deps
+
+      - name: Run extraction pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          cd pipeline
+          python run_pipeline.py \
+            --states "${{ github.event.inputs.states }}" \
+            --tax-year $(date +%Y) \
+            --output ../shared/tax-data/$(date +%Y)/states_candidate.json
+
+      - name: Run validators
+        run: |
+          cd pipeline
+          python -m validators.sanity_checks ../shared/tax-data/$(date +%Y)/states_candidate.json
+          python -m validators.cross_reference ../shared/tax-data/$(date +%Y)/states_candidate.json
+          python -m validators.diff_reporter \
+            ../shared/tax-data/$(($(date +%Y) - 1))/states.json \
+            ../shared/tax-data/$(date +%Y)/states_candidate.json \
+            --output ../shared/tax-data/$(date +%Y)/diff_report.md
+
+      - name: Promote candidate to states.json
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          mv shared/tax-data/$(date +%Y)/states_candidate.json shared/tax-data/$(date +%Y)/states.json
+
+      - name: Create Pull Request
+        if: github.event.inputs.dry_run != 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: tax-data-update-${{ github.run_number }}
+          title: "tax-data: ${{ github.event.inputs.states && format('update {0}', github.event.inputs.states) || format('annual update {0}', github.run_number) }}"
+          body-path: shared/tax-data/${{ github.run_number }}/diff_report.md
+          commit-message: "chore: update tax data"
+          labels: tax-data, automated

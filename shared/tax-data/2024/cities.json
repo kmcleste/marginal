@@ -1,0 +1,164 @@
+{
+  "_meta": {
+    "taxYear": 2024,
+    "description": "Local income tax jurisdictions (~15-20 cities/counties). Only jurisdictions with meaningful local income taxes on wages are included.",
+    "lastUpdated": "2024-01-01"
+  },
+  "new-york-city": {
+    "name": "New York City",
+    "state": "NY",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 21600, "rate": 0.03078 },
+        { "min": 21600, "max": 45000, "rate": 0.03762 },
+        { "min": 45000, "max": 90000, "rate": 0.03819 },
+        { "min": 90000, "max": null, "rate": 0.03876 }
+      ]
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 21600, "rate": 0.03078 },
+        { "min": 21600, "max": 45000, "rate": 0.03762 },
+        { "min": 45000, "max": 90000, "rate": 0.03819 },
+        { "min": 90000, "max": null, "rate": 0.03876 }
+      ]
+    },
+    "notes": "NYC resident tax on top of NY state tax. Applies to all residents regardless of where income is earned."
+  },
+  "yonkers": {
+    "name": "Yonkers",
+    "state": "NY",
+    "type": "surcharge",
+    "residentSurchargeOnStateTax": 0.1675,
+    "nonResidentRate": 0.005,
+    "notes": "Residents pay 16.75% surcharge on NY state tax. Non-residents pay 0.5% on wages earned in Yonkers."
+  },
+  "philadelphia": {
+    "name": "Philadelphia",
+    "state": "PA",
+    "type": "flat",
+    "residentRate": 0.0375,
+    "nonResidentRate": 0.034481,
+    "notes": "Philadelphia Wage Tax. Residents pay 3.75%; non-residents earning in Philadelphia pay 3.4481%. Applies to wages only."
+  },
+  "detroit": {
+    "name": "Detroit",
+    "state": "MI",
+    "type": "flat",
+    "residentRate": 0.024,
+    "nonResidentRate": 0.012,
+    "notes": "Detroit City Income Tax. 2.4% for residents, 1.2% for non-residents."
+  },
+  "grand-rapids": {
+    "name": "Grand Rapids",
+    "state": "MI",
+    "type": "flat",
+    "residentRate": 0.015,
+    "nonResidentRate": 0.0075
+  },
+  "columbus": {
+    "name": "Columbus",
+    "state": "OH",
+    "type": "flat",
+    "rate": 0.025,
+    "notes": "Columbus city income tax 2.5%. Ohio municipalities commonly levy 2–2.5%."
+  },
+  "cleveland": {
+    "name": "Cleveland",
+    "state": "OH",
+    "type": "flat",
+    "rate": 0.025
+  },
+  "cincinnati": {
+    "name": "Cincinnati",
+    "state": "OH",
+    "type": "flat",
+    "rate": 0.018
+  },
+  "baltimore-city": {
+    "name": "Baltimore City",
+    "state": "MD",
+    "type": "flat",
+    "rate": 0.032,
+    "notes": "Maryland county/city taxes range from 2.25% to 3.2% on top of state tax. Baltimore City is 3.2%."
+  },
+  "montgomery-county": {
+    "name": "Montgomery County",
+    "state": "MD",
+    "type": "flat",
+    "rate": 0.032
+  },
+  "prince-georges-county": {
+    "name": "Prince George's County",
+    "state": "MD",
+    "type": "flat",
+    "rate": 0.032
+  },
+  "kansas-city": {
+    "name": "Kansas City",
+    "state": "MO",
+    "type": "flat",
+    "rate": 0.01,
+    "notes": "Kansas City earns tax — 1% on income earned in Kansas City."
+  },
+  "st-louis": {
+    "name": "St. Louis",
+    "state": "MO",
+    "type": "flat",
+    "rate": 0.01
+  },
+  "louisville": {
+    "name": "Louisville (Jefferson County)",
+    "state": "KY",
+    "type": "flat",
+    "rate": 0.022,
+    "notes": "Jefferson County occupational license tax 2.2%."
+  },
+  "lexington": {
+    "name": "Lexington (Fayette County)",
+    "state": "KY",
+    "type": "flat",
+    "rate": 0.0225
+  },
+  "portland-metro": {
+    "name": "Portland Metro / Multnomah County",
+    "state": "OR",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 125000, "rate": 0.01 },
+        { "min": 125000, "max": null, "rate": 0.01 }
+      ]
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 200000, "rate": 0.01 },
+        { "min": 200000, "max": null, "rate": 0.01 }
+      ]
+    },
+    "notes": "Portland Metro SHS (Supportive Housing Services) tax: 1% on income over $125k single / $200k MFJ. Multnomah County Preschool for All: 1.5% over $125k, 3% over $250k (single). Complex; verify current thresholds."
+  },
+  "denver": {
+    "name": "Denver",
+    "state": "CO",
+    "type": "fixed",
+    "annualAmount": 69,
+    "notes": "Occupational privilege tax: $5.75/month ($69/year) flat. Applies to any employee working in Denver."
+  },
+  "wilmington": {
+    "name": "Wilmington",
+    "state": "DE",
+    "type": "flat",
+    "residentRate": 0.0125,
+    "nonResidentRate": 0.01125,
+    "notes": "Wilmington city wage tax 1.25% residents, 1.125% non-residents."
+  },
+  "newark": {
+    "name": "Newark",
+    "state": "NJ",
+    "type": "flat",
+    "rate": 0.01,
+    "notes": "City of Newark payroll tax 1%."
+  }
+}

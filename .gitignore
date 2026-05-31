@@ -1,0 +1,36 @@
+node_modules/
+dist/
+.next/
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.Python
+*.egg-info/
+
+# Pipeline cache (raw source snapshots — large, not version controlled)
+pipeline/cache/*.html
+pipeline/cache/*.pdf
+pipeline/cache/*.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+.nyc_output/
+htmlcov/
+.pytest_cache/

@@ -1,0 +1,1143 @@
+{
+  "_meta": {
+    "taxYear": 2024,
+    "description": "Manually curated seed dataset. Validate before production use. Pipeline maintains this going forward.",
+    "lastUpdated": "2024-01-01",
+    "sources": ["IRS Rev. Proc. 2023-34", "state DOR publications", "Tax Foundation 2024"]
+  },
+  "AL": {
+    "name": "Alabama",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 500, "rate": 0.02 },
+        { "min": 500, "max": 3000, "rate": 0.04 },
+        { "min": 3000, "max": null, "rate": 0.05 }
+      ],
+      "standardDeduction": 2500
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 1000, "rate": 0.02 },
+        { "min": 1000, "max": 6000, "rate": 0.04 },
+        { "min": 6000, "max": null, "rate": 0.05 }
+      ],
+      "standardDeduction": 7500
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false
+  },
+  "AK": {
+    "name": "Alaska",
+    "type": "none",
+    "capitalGains": "none",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No state income tax."
+  },
+  "AZ": {
+    "name": "Arizona",
+    "type": "flat",
+    "flatRate": 0.025,
+    "single": { "standardDeduction": 13850 },
+    "mfj": { "standardDeduction": 27700 },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Flat 2.5% rate effective 2023. Conforms to federal standard deduction."
+  },
+  "AR": {
+    "name": "Arkansas",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 4300, "rate": 0.02 },
+        { "min": 4300, "max": 8500, "rate": 0.04 },
+        { "min": 8500, "max": null, "rate": 0.044 }
+      ],
+      "standardDeduction": 2200
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 4300, "rate": 0.02 },
+        { "min": 4300, "max": 8500, "rate": 0.04 },
+        { "min": 8500, "max": null, "rate": 0.044 }
+      ],
+      "standardDeduction": 4400
+    },
+    "capitalGains": "preferential",
+    "capitalGainsExclusionPercent": 0.50,
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Top rate reduced to 4.4% for 2024. 50% exclusion on long-term capital gains."
+  },
+  "CA": {
+    "name": "California",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 10756, "rate": 0.01 },
+        { "min": 10756, "max": 25499, "rate": 0.02 },
+        { "min": 25499, "max": 40245, "rate": 0.04 },
+        { "min": 40245, "max": 55866, "rate": 0.06 },
+        { "min": 55866, "max": 70606, "rate": 0.08 },
+        { "min": 70606, "max": 360659, "rate": 0.093 },
+        { "min": 360659, "max": 432787, "rate": 0.103 },
+        { "min": 432787, "max": 721314, "rate": 0.113 },
+        { "min": 721314, "max": 1000000, "rate": 0.123 },
+        { "min": 1000000, "max": null, "rate": 0.133 }
+      ],
+      "standardDeduction": 5363
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 21512, "rate": 0.01 },
+        { "min": 21512, "max": 50998, "rate": 0.02 },
+        { "min": 50998, "max": 80490, "rate": 0.04 },
+        { "min": 80490, "max": 111732, "rate": 0.06 },
+        { "min": 111732, "max": 141212, "rate": 0.08 },
+        { "min": 141212, "max": 721318, "rate": 0.093 },
+        { "min": 721318, "max": 865574, "rate": 0.103 },
+        { "min": 865574, "max": 1000000, "rate": 0.113 },
+        { "min": 1000000, "max": 1442628, "rate": 0.123 },
+        { "min": 1442628, "max": null, "rate": 0.133 }
+      ],
+      "standardDeduction": 10726
+    },
+    "surtax": {
+      "threshold": 1000000,
+      "rate": 0.01,
+      "description": "Mental Health Services Tax (Prop 63)"
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Highest marginal rate in US at 13.3% (12.3% + 1% MHS surtax). Capital gains taxed as ordinary income."
+  },
+  "CO": {
+    "name": "Colorado",
+    "type": "flat",
+    "flatRate": 0.044,
+    "single": { "standardDeduction": 14600 },
+    "mfj": { "standardDeduction": 29200 },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["denver"],
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Conforms to federal standard deduction. Denver has $5.75/mo occupational privilege tax."
+  },
+  "CT": {
+    "name": "Connecticut",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 10000, "rate": 0.02 },
+        { "min": 10000, "max": 50000, "rate": 0.045 },
+        { "min": 50000, "max": 100000, "rate": 0.055 },
+        { "min": 100000, "max": 200000, "rate": 0.06 },
+        { "min": 200000, "max": 250000, "rate": 0.065 },
+        { "min": 250000, "max": 500000, "rate": 0.069 },
+        { "min": 500000, "max": null, "rate": 0.0699 }
+      ],
+      "standardDeduction": 0
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 20000, "rate": 0.02 },
+        { "min": 20000, "max": 100000, "rate": 0.045 },
+        { "min": 100000, "max": 200000, "rate": 0.055 },
+        { "min": 200000, "max": 400000, "rate": 0.06 },
+        { "min": 400000, "max": 500000, "rate": 0.065 },
+        { "min": 500000, "max": 1000000, "rate": 0.069 },
+        { "min": 1000000, "max": null, "rate": 0.0699 }
+      ],
+      "standardDeduction": 0
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": "partial",
+    "retirementExempt": false,
+    "notes": "No standard deduction. Personal exemption phases out at high income."
+  },
+  "DE": {
+    "name": "Delaware",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 2000, "rate": 0.0 },
+        { "min": 2000, "max": 5000, "rate": 0.022 },
+        { "min": 5000, "max": 10000, "rate": 0.039 },
+        { "min": 10000, "max": 20000, "rate": 0.048 },
+        { "min": 20000, "max": 25000, "rate": 0.052 },
+        { "min": 25000, "max": 60000, "rate": 0.0555 },
+        { "min": 60000, "max": null, "rate": 0.066 }
+      ],
+      "standardDeduction": 3250,
+      "personalExemption": 110
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 2000, "rate": 0.0 },
+        { "min": 2000, "max": 5000, "rate": 0.022 },
+        { "min": 5000, "max": 10000, "rate": 0.039 },
+        { "min": 10000, "max": 20000, "rate": 0.048 },
+        { "min": 20000, "max": 25000, "rate": 0.052 },
+        { "min": 25000, "max": 60000, "rate": 0.0555 },
+        { "min": 60000, "max": null, "rate": 0.066 }
+      ],
+      "standardDeduction": 6500,
+      "personalExemption": 220
+    },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["wilmington"],
+    "ssExempt": false,
+    "retirementExempt": false
+  },
+  "FL": {
+    "name": "Florida",
+    "type": "none",
+    "capitalGains": "none",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No state income tax."
+  },
+  "GA": {
+    "name": "Georgia",
+    "type": "flat",
+    "flatRate": 0.0549,
+    "single": { "standardDeduction": 12000 },
+    "mfj": { "standardDeduction": 24000 },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": "partial",
+    "notes": "Transitioned to 5.49% flat rate in 2024, phasing down to 4.99%."
+  },
+  "HI": {
+    "name": "Hawaii",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 2400, "rate": 0.014 },
+        { "min": 2400, "max": 4800, "rate": 0.032 },
+        { "min": 4800, "max": 9600, "rate": 0.055 },
+        { "min": 9600, "max": 14400, "rate": 0.064 },
+        { "min": 14400, "max": 19200, "rate": 0.068 },
+        { "min": 19200, "max": 24000, "rate": 0.072 },
+        { "min": 24000, "max": 48000, "rate": 0.076 },
+        { "min": 48000, "max": 150000, "rate": 0.079 },
+        { "min": 150000, "max": 175000, "rate": 0.0825 },
+        { "min": 175000, "max": 200000, "rate": 0.09 },
+        { "min": 200000, "max": null, "rate": 0.11 }
+      ],
+      "standardDeduction": 2200
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 4800, "rate": 0.014 },
+        { "min": 4800, "max": 9600, "rate": 0.032 },
+        { "min": 9600, "max": 19200, "rate": 0.055 },
+        { "min": 19200, "max": 28800, "rate": 0.064 },
+        { "min": 28800, "max": 38400, "rate": 0.068 },
+        { "min": 38400, "max": 48000, "rate": 0.072 },
+        { "min": 48000, "max": 96000, "rate": 0.076 },
+        { "min": 96000, "max": 300000, "rate": 0.079 },
+        { "min": 300000, "max": 350000, "rate": 0.0825 },
+        { "min": 350000, "max": 400000, "rate": 0.09 },
+        { "min": 400000, "max": null, "rate": 0.11 }
+      ],
+      "standardDeduction": 4400
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Second highest top rate in US at 11%."
+  },
+  "ID": {
+    "name": "Idaho",
+    "type": "flat",
+    "flatRate": 0.058,
+    "single": { "standardDeduction": 14600 },
+    "mfj": { "standardDeduction": 29200 },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Simplified to 5.8% flat rate in 2023."
+  },
+  "IL": {
+    "name": "Illinois",
+    "type": "flat",
+    "flatRate": 0.0495,
+    "single": { "standardDeduction": 0, "personalExemption": 2425 },
+    "mfj": { "standardDeduction": 0, "personalExemption": 4850 },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["chicago"],
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No standard deduction; personal exemption instead. SS and most retirement income exempt."
+  },
+  "IN": {
+    "name": "Indiana",
+    "type": "flat",
+    "flatRate": 0.0305,
+    "single": { "standardDeduction": 0, "personalExemption": 1000 },
+    "mfj": { "standardDeduction": 0, "personalExemption": 2000 },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "County income taxes of 0.5%–3.38% apply on top of state rate."
+  },
+  "IA": {
+    "name": "Iowa",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 6210, "rate": 0.044 },
+        { "min": 6210, "max": 31050, "rate": 0.0482 },
+        { "min": 31050, "max": null, "rate": 0.057 }
+      ],
+      "standardDeduction": 14600
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 12420, "rate": 0.044 },
+        { "min": 12420, "max": 62100, "rate": 0.0482 },
+        { "min": 62100, "max": null, "rate": 0.057 }
+      ],
+      "standardDeduction": 29200
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "Consolidated to 3 brackets in 2024. SS and retirement income exempt."
+  },
+  "KS": {
+    "name": "Kansas",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 15000, "rate": 0.031 },
+        { "min": 15000, "max": 30000, "rate": 0.0525 },
+        { "min": 30000, "max": null, "rate": 0.057 }
+      ],
+      "standardDeduction": 3500
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 30000, "rate": 0.031 },
+        { "min": 30000, "max": 60000, "rate": 0.0525 },
+        { "min": 60000, "max": null, "rate": 0.057 }
+      ],
+      "standardDeduction": 8000
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false
+  },
+  "KY": {
+    "name": "Kentucky",
+    "type": "flat",
+    "flatRate": 0.04,
+    "single": { "standardDeduction": 3160 },
+    "mfj": { "standardDeduction": 3160 },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["louisville", "lexington"],
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Rate reduced from 4.5% to 4% in 2024."
+  },
+  "LA": {
+    "name": "Louisiana",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 12500, "rate": 0.0185 },
+        { "min": 12500, "max": 50000, "rate": 0.035 },
+        { "min": 50000, "max": null, "rate": 0.0425 }
+      ],
+      "standardDeduction": 4500
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 25000, "rate": 0.0185 },
+        { "min": 25000, "max": 100000, "rate": 0.035 },
+        { "min": 100000, "max": null, "rate": 0.0425 }
+      ],
+      "standardDeduction": 9000
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Rates reduced in 2023."
+  },
+  "ME": {
+    "name": "Maine",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 26050, "rate": 0.058 },
+        { "min": 26050, "max": 61600, "rate": 0.0675 },
+        { "min": 61600, "max": null, "rate": 0.0715 }
+      ],
+      "standardDeduction": 14600
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 52100, "rate": 0.058 },
+        { "min": 52100, "max": 123200, "rate": 0.0675 },
+        { "min": 123200, "max": null, "rate": 0.0715 }
+      ],
+      "standardDeduction": 29200
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Conforms to federal standard deduction."
+  },
+  "MD": {
+    "name": "Maryland",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 1000, "rate": 0.02 },
+        { "min": 1000, "max": 2000, "rate": 0.03 },
+        { "min": 2000, "max": 3000, "rate": 0.04 },
+        { "min": 3000, "max": 100000, "rate": 0.0475 },
+        { "min": 100000, "max": 125000, "rate": 0.05 },
+        { "min": 125000, "max": 150000, "rate": 0.0525 },
+        { "min": 150000, "max": 250000, "rate": 0.055 },
+        { "min": 250000, "max": null, "rate": 0.0575 }
+      ],
+      "standardDeduction": 2400
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 1000, "rate": 0.02 },
+        { "min": 1000, "max": 2000, "rate": 0.03 },
+        { "min": 2000, "max": 3000, "rate": 0.04 },
+        { "min": 3000, "max": 150000, "rate": 0.0475 },
+        { "min": 150000, "max": 175000, "rate": 0.05 },
+        { "min": 175000, "max": 225000, "rate": 0.0525 },
+        { "min": 225000, "max": 300000, "rate": 0.055 },
+        { "min": 300000, "max": null, "rate": 0.0575 }
+      ],
+      "standardDeduction": 4850
+    },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["baltimore-city", "montgomery-county", "prince-georges-county"],
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "County income taxes (1.75%–3.2%) apply on top of state rate."
+  },
+  "MA": {
+    "name": "Massachusetts",
+    "type": "flat",
+    "flatRate": 0.05,
+    "single": { "standardDeduction": 0, "personalExemption": 4400 },
+    "mfj": { "standardDeduction": 0, "personalExemption": 8800 },
+    "surtax": {
+      "threshold": 1000000,
+      "rate": 0.04,
+      "description": "\"Millionaire Tax\" (Prop 1, effective 2023)"
+    },
+    "capitalGains": {
+      "shortTerm": 0.12,
+      "longTerm": 0.05
+    },
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "5% on most income; 12% on short-term capital gains; 4% surtax on income > $1M."
+  },
+  "MI": {
+    "name": "Michigan",
+    "type": "flat",
+    "flatRate": 0.0405,
+    "single": { "standardDeduction": 0, "personalExemption": 5600 },
+    "mfj": { "standardDeduction": 0, "personalExemption": 11200 },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["detroit", "grand-rapids"],
+    "ssExempt": false,
+    "retirementExempt": "partial",
+    "notes": "Detroit levies 2.4% city income tax."
+  },
+  "MN": {
+    "name": "Minnesota",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 31690, "rate": 0.0535 },
+        { "min": 31690, "max": 104090, "rate": 0.068 },
+        { "min": 104090, "max": 193240, "rate": 0.0785 },
+        { "min": 193240, "max": null, "rate": 0.0985 }
+      ],
+      "standardDeduction": 14575
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 46330, "rate": 0.0535 },
+        { "min": 46330, "max": 184040, "rate": 0.068 },
+        { "min": 184040, "max": 304970, "rate": 0.0785 },
+        { "min": 304970, "max": null, "rate": 0.0985 }
+      ],
+      "standardDeduction": 29150
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": "partial",
+    "retirementExempt": false,
+    "notes": "Top marginal rate 9.85%."
+  },
+  "MS": {
+    "name": "Mississippi",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 10000, "rate": 0.0 },
+        { "min": 10000, "max": null, "rate": 0.05 }
+      ],
+      "standardDeduction": 2300
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 10000, "rate": 0.0 },
+        { "min": 10000, "max": null, "rate": 0.05 }
+      ],
+      "standardDeduction": 4600
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "First $10,000 exempt. Phasing to 4% flat over time."
+  },
+  "MO": {
+    "name": "Missouri",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 1207, "rate": 0.0 },
+        { "min": 1207, "max": 2414, "rate": 0.02 },
+        { "min": 2414, "max": 3621, "rate": 0.025 },
+        { "min": 3621, "max": 4828, "rate": 0.03 },
+        { "min": 4828, "max": 6035, "rate": 0.035 },
+        { "min": 6035, "max": 7242, "rate": 0.04 },
+        { "min": 7242, "max": 8449, "rate": 0.045 },
+        { "min": 8449, "max": null, "rate": 0.0495 }
+      ],
+      "standardDeduction": 14600
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 1207, "rate": 0.0 },
+        { "min": 1207, "max": 2414, "rate": 0.02 },
+        { "min": 2414, "max": 3621, "rate": 0.025 },
+        { "min": 3621, "max": 4828, "rate": 0.03 },
+        { "min": 4828, "max": 6035, "rate": 0.035 },
+        { "min": 6035, "max": 7242, "rate": 0.04 },
+        { "min": 7242, "max": 8449, "rate": 0.045 },
+        { "min": 8449, "max": null, "rate": 0.0495 }
+      ],
+      "standardDeduction": 29200
+    },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["kansas-city", "st-louis"],
+    "ssExempt": "partial",
+    "retirementExempt": false,
+    "notes": "Conforms to federal standard deduction."
+  },
+  "MT": {
+    "name": "Montana",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 3600, "rate": 0.01 },
+        { "min": 3600, "max": 6300, "rate": 0.02 },
+        { "min": 6300, "max": 9700, "rate": 0.03 },
+        { "min": 9700, "max": 13000, "rate": 0.04 },
+        { "min": 13000, "max": 16800, "rate": 0.05 },
+        { "min": 16800, "max": 21600, "rate": 0.06 },
+        { "min": 21600, "max": null, "rate": 0.0675 }
+      ],
+      "standardDeduction": 5540
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 3600, "rate": 0.01 },
+        { "min": 3600, "max": 6300, "rate": 0.02 },
+        { "min": 6300, "max": 9700, "rate": 0.03 },
+        { "min": 9700, "max": 13000, "rate": 0.04 },
+        { "min": 13000, "max": 16800, "rate": 0.05 },
+        { "min": 16800, "max": 21600, "rate": 0.06 },
+        { "min": 21600, "max": null, "rate": 0.0675 }
+      ],
+      "standardDeduction": 11080
+    },
+    "capitalGains": "preferential",
+    "capitalGainsExclusionPercent": 0.40,
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false
+  },
+  "NE": {
+    "name": "Nebraska",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 3700, "rate": 0.0246 },
+        { "min": 3700, "max": 22170, "rate": 0.0351 },
+        { "min": 22170, "max": 35730, "rate": 0.0501 },
+        { "min": 35730, "max": null, "rate": 0.0664 }
+      ],
+      "standardDeduction": 7900
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 7390, "rate": 0.0246 },
+        { "min": 7390, "max": 44350, "rate": 0.0351 },
+        { "min": 44350, "max": 71480, "rate": 0.0501 },
+        { "min": 71480, "max": null, "rate": 0.0664 }
+      ],
+      "standardDeduction": 15800
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": "partial",
+    "retirementExempt": false,
+    "notes": "Top rate being reduced each year; 6.64% in 2024."
+  },
+  "NV": {
+    "name": "Nevada",
+    "type": "none",
+    "capitalGains": "none",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No state income tax."
+  },
+  "NH": {
+    "name": "New Hampshire",
+    "type": "flat",
+    "flatRate": 0.03,
+    "taxBase": "interest_and_dividends_only",
+    "single": { "standardDeduction": 2400 },
+    "mfj": { "standardDeduction": 4800 },
+    "capitalGains": "none",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "Interest and dividends tax at 3% in 2024; fully eliminated in 2025. Wages not taxed."
+  },
+  "NJ": {
+    "name": "New Jersey",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 20000, "rate": 0.014 },
+        { "min": 20000, "max": 35000, "rate": 0.0175 },
+        { "min": 35000, "max": 40000, "rate": 0.035 },
+        { "min": 40000, "max": 75000, "rate": 0.05525 },
+        { "min": 75000, "max": 500000, "rate": 0.0637 },
+        { "min": 500000, "max": 1000000, "rate": 0.0897 },
+        { "min": 1000000, "max": null, "rate": 0.1075 }
+      ],
+      "standardDeduction": 0,
+      "personalExemption": 1000
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 20000, "rate": 0.014 },
+        { "min": 20000, "max": 50000, "rate": 0.0175 },
+        { "min": 50000, "max": 70000, "rate": 0.0245 },
+        { "min": 70000, "max": 80000, "rate": 0.035 },
+        { "min": 80000, "max": 150000, "rate": 0.05525 },
+        { "min": 150000, "max": 500000, "rate": 0.0637 },
+        { "min": 500000, "max": 1000000, "rate": 0.0897 },
+        { "min": 1000000, "max": null, "rate": 0.1075 }
+      ],
+      "standardDeduction": 0,
+      "personalExemption": 2000
+    },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["newark"],
+    "ssExempt": "partial",
+    "retirementExempt": "partial"
+  },
+  "NM": {
+    "name": "New Mexico",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 5500, "rate": 0.017 },
+        { "min": 5500, "max": 11000, "rate": 0.032 },
+        { "min": 11000, "max": 16000, "rate": 0.047 },
+        { "min": 16000, "max": 210000, "rate": 0.049 },
+        { "min": 210000, "max": null, "rate": 0.059 }
+      ],
+      "standardDeduction": 14600
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 8000, "rate": 0.017 },
+        { "min": 8000, "max": 16000, "rate": 0.032 },
+        { "min": 16000, "max": 24000, "rate": 0.047 },
+        { "min": 24000, "max": 315000, "rate": 0.049 },
+        { "min": 315000, "max": null, "rate": 0.059 }
+      ],
+      "standardDeduction": 29200
+    },
+    "capitalGains": "preferential",
+    "capitalGainsExclusionPercent": 0.40,
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false
+  },
+  "NY": {
+    "name": "New York",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 17150, "rate": 0.04 },
+        { "min": 17150, "max": 23600, "rate": 0.045 },
+        { "min": 23600, "max": 27900, "rate": 0.0525 },
+        { "min": 27900, "max": 161550, "rate": 0.0585 },
+        { "min": 161550, "max": 323200, "rate": 0.0625 },
+        { "min": 323200, "max": 2155350, "rate": 0.0685 },
+        { "min": 2155350, "max": 5000000, "rate": 0.0965 },
+        { "min": 5000000, "max": 25000000, "rate": 0.103 },
+        { "min": 25000000, "max": null, "rate": 0.109 }
+      ],
+      "standardDeduction": 8000
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 27900, "rate": 0.04 },
+        { "min": 27900, "max": 43000, "rate": 0.045 },
+        { "min": 43000, "max": 161550, "rate": 0.0525 },
+        { "min": 161550, "max": 323200, "rate": 0.0585 },
+        { "min": 323200, "max": 2155350, "rate": 0.0625 },
+        { "min": 2155350, "max": 5000000, "rate": 0.0685 },
+        { "min": 5000000, "max": 25000000, "rate": 0.0965 },
+        { "min": 25000000, "max": null, "rate": 0.109 }
+      ],
+      "standardDeduction": 16050
+    },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["new-york-city", "yonkers"],
+    "ssExempt": true,
+    "retirementExempt": "partial",
+    "notes": "NYC adds up to 3.876% city tax. Yonkers adds 16.75% surcharge on state tax."
+  },
+  "NC": {
+    "name": "North Carolina",
+    "type": "flat",
+    "flatRate": 0.0475,
+    "single": { "standardDeduction": 12750 },
+    "mfj": { "standardDeduction": 25500 },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Rate was 4.99% in 2022, 4.75% in 2024, continuing to drop to 3.99%."
+  },
+  "ND": {
+    "name": "North Dakota",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 44725, "rate": 0.011 },
+        { "min": 44725, "max": 225975, "rate": 0.0204 },
+        { "min": 225975, "max": null, "rate": 0.029 }
+      ],
+      "standardDeduction": 14600
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 74750, "rate": 0.011 },
+        { "min": 74750, "max": 275925, "rate": 0.0204 },
+        { "min": 275925, "max": null, "rate": 0.029 }
+      ],
+      "standardDeduction": 29200
+    },
+    "capitalGains": "preferential",
+    "capitalGainsExclusionPercent": 0.40,
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false
+  },
+  "OH": {
+    "name": "Ohio",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 26050, "rate": 0.0 },
+        { "min": 26050, "max": 100000, "rate": 0.02765 },
+        { "min": 100000, "max": null, "rate": 0.03990 }
+      ],
+      "standardDeduction": 0,
+      "personalExemption": 2400
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 26050, "rate": 0.0 },
+        { "min": 26050, "max": 100000, "rate": 0.02765 },
+        { "min": 100000, "max": null, "rate": 0.03990 }
+      ],
+      "standardDeduction": 0,
+      "personalExemption": 4800
+    },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["columbus", "cleveland", "cincinnati"],
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "First $26,050 exempt. Most Ohio cities levy 2–2.5% local income tax."
+  },
+  "OK": {
+    "name": "Oklahoma",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 1000, "rate": 0.0025 },
+        { "min": 1000, "max": 2500, "rate": 0.0075 },
+        { "min": 2500, "max": 3750, "rate": 0.0175 },
+        { "min": 3750, "max": 4900, "rate": 0.0275 },
+        { "min": 4900, "max": 7200, "rate": 0.0375 },
+        { "min": 7200, "max": null, "rate": 0.0475 }
+      ],
+      "standardDeduction": 6350
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 2000, "rate": 0.0025 },
+        { "min": 2000, "max": 5000, "rate": 0.0075 },
+        { "min": 5000, "max": 7500, "rate": 0.0175 },
+        { "min": 7500, "max": 9800, "rate": 0.0275 },
+        { "min": 9800, "max": 12200, "rate": 0.0375 },
+        { "min": 12200, "max": null, "rate": 0.0475 }
+      ],
+      "standardDeduction": 12700
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": "partial"
+  },
+  "OR": {
+    "name": "Oregon",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 4050, "rate": 0.0475 },
+        { "min": 4050, "max": 10200, "rate": 0.0675 },
+        { "min": 10200, "max": 125000, "rate": 0.0875 },
+        { "min": 125000, "max": null, "rate": 0.099 }
+      ],
+      "standardDeduction": 2420
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 8100, "rate": 0.0475 },
+        { "min": 8100, "max": 20400, "rate": 0.0675 },
+        { "min": 20400, "max": 250000, "rate": 0.0875 },
+        { "min": 250000, "max": null, "rate": 0.099 }
+      ],
+      "standardDeduction": 4840
+    },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["portland-metro"],
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Portland metro area has additional 1% income tax and Multnomah County has preschool tax."
+  },
+  "PA": {
+    "name": "Pennsylvania",
+    "type": "flat",
+    "flatRate": 0.0307,
+    "single": { "standardDeduction": 0 },
+    "mfj": { "standardDeduction": 0 },
+    "capitalGains": "ordinary",
+    "localTax": true,
+    "localTaxJurisdictions": ["philadelphia"],
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No standard deduction. Philadelphia wages taxed at 3.75% (residents) / 3.44% (non-residents)."
+  },
+  "RI": {
+    "name": "Rhode Island",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 77450, "rate": 0.0375 },
+        { "min": 77450, "max": 176050, "rate": 0.0475 },
+        { "min": 176050, "max": null, "rate": 0.0599 }
+      ],
+      "standardDeduction": 10550
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 77450, "rate": 0.0375 },
+        { "min": 77450, "max": 176050, "rate": 0.0475 },
+        { "min": 176050, "max": null, "rate": 0.0599 }
+      ],
+      "standardDeduction": 21100
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": "partial",
+    "retirementExempt": false
+  },
+  "SC": {
+    "name": "South Carolina",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 3460, "rate": 0.0 },
+        { "min": 3460, "max": 17330, "rate": 0.03 },
+        { "min": 17330, "max": null, "rate": 0.065 }
+      ],
+      "standardDeduction": 14600
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 3460, "rate": 0.0 },
+        { "min": 3460, "max": 17330, "rate": 0.03 },
+        { "min": 17330, "max": null, "rate": 0.065 }
+      ],
+      "standardDeduction": 29200
+    },
+    "capitalGains": "preferential",
+    "capitalGainsExclusionPercent": 0.44,
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": "partial",
+    "notes": "Top rate being reduced; 6.5% in 2024."
+  },
+  "SD": {
+    "name": "South Dakota",
+    "type": "none",
+    "capitalGains": "none",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No state income tax."
+  },
+  "TN": {
+    "name": "Tennessee",
+    "type": "none",
+    "capitalGains": "none",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No state income tax. Hall Tax on investment income fully repealed as of 2021."
+  },
+  "TX": {
+    "name": "Texas",
+    "type": "none",
+    "capitalGains": "none",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No state income tax."
+  },
+  "UT": {
+    "name": "Utah",
+    "type": "flat",
+    "flatRate": 0.0465,
+    "single": { "standardDeduction": 0, "personalExemption": 1950 },
+    "mfj": { "standardDeduction": 0, "personalExemption": 3900 },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "No standard deduction; nonrefundable credit of 6% of federal exemption instead."
+  },
+  "VT": {
+    "name": "Vermont",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 45400, "rate": 0.0335 },
+        { "min": 45400, "max": 110050, "rate": 0.066 },
+        { "min": 110050, "max": 229550, "rate": 0.076 },
+        { "min": 229550, "max": null, "rate": 0.0875 }
+      ],
+      "standardDeduction": 6500
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 75850, "rate": 0.0335 },
+        { "min": 75850, "max": 183400, "rate": 0.066 },
+        { "min": 183400, "max": 236350, "rate": 0.076 },
+        { "min": 236350, "max": null, "rate": 0.0875 }
+      ],
+      "standardDeduction": 13000
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": "partial",
+    "retirementExempt": false
+  },
+  "VA": {
+    "name": "Virginia",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 3000, "rate": 0.02 },
+        { "min": 3000, "max": 5000, "rate": 0.03 },
+        { "min": 5000, "max": 17000, "rate": 0.05 },
+        { "min": 17000, "max": null, "rate": 0.0575 }
+      ],
+      "standardDeduction": 8000
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 3000, "rate": 0.02 },
+        { "min": 3000, "max": 5000, "rate": 0.03 },
+        { "min": 5000, "max": 17000, "rate": 0.05 },
+        { "min": 17000, "max": null, "rate": 0.0575 }
+      ],
+      "standardDeduction": 16000
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "Standard deduction increased to $8,000 single / $16,000 MFJ in recent years."
+  },
+  "WA": {
+    "name": "Washington",
+    "type": "none",
+    "capitalGains": "flat",
+    "capitalGainsRate": 0.07,
+    "capitalGainsThreshold": 262000,
+    "capitalGainsNote": "7% on long-term capital gains exceeding $262,000 (2024). Does NOT apply to real estate.",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No income tax. Capital gains tax enacted 2022, upheld by WA Supreme Court 2023."
+  },
+  "WV": {
+    "name": "West Virginia",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 10000, "rate": 0.03 },
+        { "min": 10000, "max": 25000, "rate": 0.04 },
+        { "min": 25000, "max": 40000, "rate": 0.045 },
+        { "min": 40000, "max": 60000, "rate": 0.06 },
+        { "min": 60000, "max": null, "rate": 0.065 }
+      ],
+      "standardDeduction": 0,
+      "personalExemption": 2000
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 10000, "rate": 0.03 },
+        { "min": 10000, "max": 25000, "rate": 0.04 },
+        { "min": 25000, "max": 40000, "rate": 0.045 },
+        { "min": 40000, "max": 60000, "rate": 0.06 },
+        { "min": 60000, "max": null, "rate": 0.065 }
+      ],
+      "standardDeduction": 0,
+      "personalExemption": 4000
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": "partial",
+    "retirementExempt": "partial"
+  },
+  "WI": {
+    "name": "Wisconsin",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 13810, "rate": 0.035 },
+        { "min": 13810, "max": 27630, "rate": 0.044 },
+        { "min": 27630, "max": 304170, "rate": 0.053 },
+        { "min": 304170, "max": null, "rate": 0.0765 }
+      ],
+      "standardDeduction": 12760
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 18420, "rate": 0.035 },
+        { "min": 18420, "max": 36840, "rate": 0.044 },
+        { "min": 36840, "max": 405550, "rate": 0.053 },
+        { "min": 405550, "max": null, "rate": 0.0765 }
+      ],
+      "standardDeduction": 23620
+    },
+    "capitalGains": "preferential",
+    "capitalGainsExclusionPercent": 0.30,
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false,
+    "notes": "30% capital gains exclusion."
+  },
+  "WY": {
+    "name": "Wyoming",
+    "type": "none",
+    "capitalGains": "none",
+    "localTax": false,
+    "ssExempt": true,
+    "retirementExempt": true,
+    "notes": "No state income tax."
+  },
+  "DC": {
+    "name": "District of Columbia",
+    "type": "bracketed",
+    "single": {
+      "brackets": [
+        { "min": 0, "max": 10000, "rate": 0.04 },
+        { "min": 10000, "max": 40000, "rate": 0.06 },
+        { "min": 40000, "max": 60000, "rate": 0.065 },
+        { "min": 60000, "max": 250000, "rate": 0.085 },
+        { "min": 250000, "max": 500000, "rate": 0.0925 },
+        { "min": 500000, "max": 1000000, "rate": 0.0975 },
+        { "min": 1000000, "max": null, "rate": 0.1075 }
+      ],
+      "standardDeduction": 14600
+    },
+    "mfj": {
+      "brackets": [
+        { "min": 0, "max": 10000, "rate": 0.04 },
+        { "min": 10000, "max": 40000, "rate": 0.06 },
+        { "min": 40000, "max": 60000, "rate": 0.065 },
+        { "min": 60000, "max": 250000, "rate": 0.085 },
+        { "min": 250000, "max": 500000, "rate": 0.0925 },
+        { "min": 500000, "max": 1000000, "rate": 0.0975 },
+        { "min": 1000000, "max": null, "rate": 0.1075 }
+      ],
+      "standardDeduction": 29200
+    },
+    "capitalGains": "ordinary",
+    "localTax": false,
+    "ssExempt": false,
+    "retirementExempt": false
+  }
+}

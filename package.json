@@ -1,0 +1,30 @@
+{
+  "name": "wealthkit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source financial tools for self-directed high earners",
+  "license": "MIT",
+  "workspaces": [
+    "tools/*",
+    "shared"
+  ],
+  "scripts": {
+    "test": "jest",
+    "test:math": "jest shared/math",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2020", "DOM"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@wealthkit/math": ["./shared/math/index.ts"],
+      "@wealthkit/theme": ["./shared/theme/tokens.ts"],
+      "@wealthkit/components": ["./shared/components/index.ts"]
+    }
+  },
+  "include": ["shared", "tools"],
+  "exclude": ["node_modules", "dist"]
+}
