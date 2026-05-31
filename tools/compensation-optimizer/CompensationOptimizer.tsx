@@ -316,7 +316,13 @@ function runLifetimeSim(inp: LifetimeInput): SimYear[] {
     const age      = inp.currentAge + i;
     const isRetired = age >= inp.retireAge;
     const inflFactor  = Math.pow(1 + inp.inflationRate, i);
-    const salaryScale = Math.pow(1 + inp.salaryGrowthRate, i);
+
+    // Logarithmic salary curve: growth rate decays toward inflation over time.
+    // Effective rate = inflation + (nominalGrowth - inflation) / (1 + i * 0.15)
+    // At i=0: full rate. At i=10: ~40% of excess above inflation. At i=30: ~18%.
+    const excessGrowth = Math.max(0, inp.salaryGrowthRate - inp.inflationRate);
+    const effectiveGrowth = inp.inflationRate + excessGrowth / (1 + i * 0.15);
+    const salaryScale = Math.pow(1 + effectiveGrowth, i);
     const salary   = isRetired ? 0 : inp.currentSalary * salaryScale;
     const ssIncome = age >= inp.ssClaimAge ? inp.ssAnnual * inflFactor : 0;
 
@@ -327,12 +333,13 @@ function runLifetimeSim(inp: LifetimeInput): SimYear[] {
     balTax   *= (1 + r * (1 - inp.ltcgRate)); // approximate after-tax LTCG drag on annual gains
 
     if (!isRetired) {
-      // Contributions scale with salary; HSA stays flat (IRS limits don't auto-grow)
-      bal401k += (inp.contrib401k + inp.contribMatch) * salaryScale;
-      balRoth  += inp.contribRoth * salaryScale;
-      balHsa   += inp.contribHsa;
-      // Net surplus above annual spend flows to taxable brokerage
-      const surplus = Math.max(0, inp.currentNet * inflFactor - inp.annualSpend * inflFactor);
+      // IRS limits grow with inflation (COLA), not salary — contributions stay in real-dollar terms
+      bal401k += (inp.contrib401k + inp.contribMatch) * inflFactor;
+      balRoth  += inp.contribRoth * inflFactor;
+      balHsa   += inp.contribHsa * inflFactor;
+      // Surplus: salary-driven net minus fixed annual spend, both in nominal dollars
+      const nominalNet = inp.currentNet * salaryScale;
+      const surplus = Math.max(0, nominalNet - inp.annualSpend * inflFactor);
       balTax += surplus;
       years.push({
         age, bal401k, balRoth, balHsa, balTaxable: balTax,
