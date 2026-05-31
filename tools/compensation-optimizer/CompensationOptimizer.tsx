@@ -124,21 +124,41 @@ function calcTaxFull(
 interface UtilParams {
   k401: number; hsa: number; fsa: number; ira: number; megaBack: number; otherPretax: number;
   liquidityFloor: number; retireHorizon: number; expectedReturn: number; discountRate: number;
+  spouseK401Opt?: number;  // optimizer override; undefined = use cfg.spouseNetAnnual
+  spouseIraOpt?: number;   // optimizer override
 }
 
 interface UtilCfg {
   gross: number; bonusGross: number; status: FilingStatus;
   matchPct: number; matchCap: number; matchVestingFactor: number;
   periodsPerYear: number; stateCode: string;
-  spouseNetAnnual: number;  // spouse after-tax after-contribution income; 0 if no spouse
-  spouseMatchAmt: number;   // spouse vested employer match
-  fixedCostAnnual: number;  // total annual fixed obligations (mortgage, cars, etc.)
+  spouseNetAnnual: number;   // pre-computed spouse after-tax after-contribution income
+  spouseMatchAmt: number;    // pre-computed spouse vested employer match
+  spouseGross: number;       // spouse total gross (incl AIP); 0 if no spouse / career break
+  spouseBaseSalary: number;  // spouse base salary (for match cap calc)
+  spouseMatchPctVal: number; // spouse employer match %
+  spouseMatchCapVal: number; // spouse employer match cap % of base salary
+  fixedCostAnnual: number;   // total annual fixed obligations
 }
 
 function computeUtility(params: UtilParams, cfg: UtilCfg) {
-  const { k401, hsa, fsa, ira, megaBack, otherPretax, liquidityFloor, retireHorizon, expectedReturn, discountRate } = params;
+  const { k401, hsa, fsa, ira, megaBack, otherPretax, liquidityFloor, retireHorizon, expectedReturn, discountRate,
+          spouseK401Opt, spouseIraOpt } = params;
   const { gross, bonusGross, status, matchPct, matchCap, matchVestingFactor, stateCode,
-          spouseNetAnnual, spouseMatchAmt, fixedCostAnnual } = cfg;
+          spouseGross, spouseBaseSalary, spouseMatchPctVal, spouseMatchCapVal, fixedCostAnnual } = cfg;
+
+  // Spouse net/match: use dynamic calc when optimizer is sweeping spouse vars, else use pre-computed
+  let spouseNetAnnual: number;
+  let spouseMatchAmt: number;
+  if (spouseK401Opt !== undefined && spouseIraOpt !== undefined && spouseGross > 0) {
+    const spTax = calcTaxFull(spouseGross, { k401: spouseK401Opt }, status, stateCode);
+    spouseNetAnnual = spouseGross - spTax.total - spTax.pretax - spouseIraOpt;
+    const spMatchable = Math.min(spouseK401Opt, spouseBaseSalary * (spouseMatchCapVal / 100));
+    spouseMatchAmt = spMatchable * (spouseMatchPctVal / 100);
+  } else {
+    spouseNetAnnual = cfg.spouseNetAnnual;
+    spouseMatchAmt = cfg.spouseMatchAmt;
+  }
 
   const matchableContrib = Math.min(k401, gross * (matchCap / 100));
   const employerMatch = matchableContrib * (matchPct / 100) * matchVestingFactor;
@@ -188,6 +208,11 @@ function optimize(cfg: UtilCfg, constraints: OptConstraints) {
   const iraMax  = constraints.catchup   ? LIM.iraCatch  : LIM.ira;
   const megaMax = constraints.megaBackdoor ? LIM.megaBack : 0;
 
+  const spHasIncome = cfg.spouseGross > 0;
+  const spK401Max = spHasIncome ? k401Max : 0;
+  const spIraMax  = spHasIncome ? iraMax  : 0;
+  const spK401Min = spHasIncome ? cfg.spouseBaseSalary * (cfg.spouseMatchCapVal / 100) : 0;
+
   const baseParams = {
     liquidityFloor: constraints.liquidityFloor,
     retireHorizon: constraints.retireHorizon,
@@ -196,19 +221,21 @@ function optimize(cfg: UtilCfg, constraints: OptConstraints) {
   };
 
   const PARAMS = [
-    { key: "k401" as const,    min: cfg.gross * (cfg.matchCap / 100), max: k401Max, step: 500 },
-    { key: "hsa" as const,     min: 0, max: hsaMax,  step: 100 },
-    { key: "fsa" as const,     min: 0, max: LIM.fsa, step: 100 },
-    { key: "ira" as const,     min: 0, max: iraMax,  step: 500 },
-    { key: "megaBack" as const,min: 0, max: megaMax, step: 500 },
-    { key: "otherPretax" as const, min: constraints.otherPretax, max: constraints.otherPretax, step: 1 },
+    { key: "k401" as const,           min: cfg.gross * (cfg.matchCap / 100), max: k401Max,  step: 500 },
+    { key: "hsa" as const,            min: 0, max: hsaMax,  step: 100 },
+    { key: "fsa" as const,            min: 0, max: LIM.fsa, step: 100 },
+    { key: "ira" as const,            min: 0, max: iraMax,  step: 500 },
+    { key: "megaBack" as const,       min: 0, max: megaMax, step: 500 },
+    { key: "otherPretax" as const,    min: constraints.otherPretax, max: constraints.otherPretax, step: 1 },
+    { key: "spouseK401Opt" as const,  min: spK401Min, max: spK401Max, step: 500 },
+    { key: "spouseIraOpt" as const,   min: 0,         max: spIraMax,  step: 500 },
   ];
 
   const starts = [
-    { k401: k401Max, hsa: hsaMax, fsa: LIM.fsa, ira: iraMax, megaBack: megaMax, otherPretax: constraints.otherPretax },
-    { k401: cfg.gross * cfg.matchCap / 100, hsa: hsaMax, fsa: 0, ira: iraMax, megaBack: 0, otherPretax: constraints.otherPretax },
-    { k401: k401Max, hsa: 0, fsa: 0, ira: 0, megaBack: 0, otherPretax: constraints.otherPretax },
-    { k401: k401Max / 2, hsa: hsaMax / 2, fsa: LIM.fsa / 2, ira: iraMax, megaBack: megaMax / 2, otherPretax: constraints.otherPretax },
+    { k401: k401Max, hsa: hsaMax, fsa: LIM.fsa, ira: iraMax, megaBack: megaMax, otherPretax: constraints.otherPretax, spouseK401Opt: spK401Max, spouseIraOpt: spIraMax },
+    { k401: cfg.gross * cfg.matchCap / 100, hsa: hsaMax, fsa: 0, ira: iraMax, megaBack: 0, otherPretax: constraints.otherPretax, spouseK401Opt: spK401Min, spouseIraOpt: spIraMax },
+    { k401: k401Max, hsa: 0, fsa: 0, ira: 0, megaBack: 0, otherPretax: constraints.otherPretax, spouseK401Opt: spK401Max, spouseIraOpt: 0 },
+    { k401: k401Max / 2, hsa: hsaMax / 2, fsa: LIM.fsa / 2, ira: iraMax, megaBack: megaMax / 2, otherPretax: constraints.otherPretax, spouseK401Opt: spK401Max / 2, spouseIraOpt: spIraMax },
   ];
 
   let globalBest: typeof starts[0] | null = null;
@@ -485,13 +512,14 @@ export default function CompensationOptimizer() {
   const [megaEnabled,    setMegaEnabled] = useState(false);
 
   // ── Spouse ──
-  const [spouseEnabled,  setSpouseEnabled]  = useState(false);
-  const [spouseBase,     setSpouseBase]     = useState(200000);
-  const [spouseAipPct,   setSpouseAipPct]   = useState(20);
-  const [spouseK401,     setSpouseK401]     = useState(23000);
-  const [spouseMatchPct, setSpouseMatchPct] = useState(100);
-  const [spouseMatchCap, setSpouseMatchCap] = useState(6);
-  const [spouseIra,      setSpouseIra]      = useState(7000);
+  const [spouseEnabled,     setSpouseEnabled]     = useState(false);
+  const [spouseCareerBreak, setSpouseCareerBreak] = useState(false);
+  const [spouseBase,        setSpouseBase]        = useState(200000);
+  const [spouseAipPct,      setSpouseAipPct]      = useState(20);
+  const [spouseK401,        setSpouseK401]        = useState(23000);
+  const [spouseMatchPct,    setSpouseMatchPct]    = useState(100);
+  const [spouseMatchCap,    setSpouseMatchCap]    = useState(6);
+  const [spouseIra,         setSpouseIra]         = useState(7000);
 
   // ── Fixed Costs ──
   const [mortgage,    setMortgage]    = useState(3500);
@@ -535,22 +563,28 @@ export default function CompensationOptimizer() {
   const fixedCostAnnual  = fixedCostMonthly * 12;
 
   const cfg = useMemo<UtilCfg>(() => {
+    const activeSpouse = spouseEnabled && !spouseCareerBreak;
     const spGross = spouseEnabled ? spouseBase * (1 + spouseAipPct / 100) : 0;
-    const spTax   = spouseEnabled
+    const spTax   = activeSpouse
       ? calcTaxFull(spGross, { k401: spouseK401 }, status, stateCode)
       : { total: 0, pretax: 0 };
-    const spNet   = spouseEnabled ? spGross - spTax.total - spTax.pretax - spouseIra : 0;
-    const spMatch = spouseEnabled
+    const spNet   = activeSpouse ? spGross - spTax.total - spTax.pretax - spouseIra : 0;
+    const spMatch = activeSpouse
       ? Math.min(spouseK401, spouseBase * (spouseMatchCap / 100)) * (spouseMatchPct / 100)
       : 0;
     const fixedAnn = (mortgage + carPayment1 + carPayment2 + otherFixed) * 12;
     return {
       gross: base, bonusGross, status, matchPct, matchCap,
       matchVestingFactor: matchVesting / 100, periodsPerYear, stateCode,
-      spouseNetAnnual: spNet, spouseMatchAmt: spMatch, fixedCostAnnual: fixedAnn,
+      spouseNetAnnual: spNet, spouseMatchAmt: spMatch,
+      spouseGross: activeSpouse ? spGross : 0,
+      spouseBaseSalary: activeSpouse ? spouseBase : 0,
+      spouseMatchPctVal: activeSpouse ? spouseMatchPct : 0,
+      spouseMatchCapVal: activeSpouse ? spouseMatchCap : 0,
+      fixedCostAnnual: fixedAnn,
     };
   }, [base, bonusGross, status, matchPct, matchCap, matchVesting, periodsPerYear, stateCode,
-      spouseEnabled, spouseBase, spouseAipPct, spouseK401, spouseIra,
+      spouseEnabled, spouseCareerBreak, spouseBase, spouseAipPct, spouseK401, spouseIra,
       spouseMatchPct, spouseMatchCap, mortgage, carPayment1, carPayment2, otherFixed]);
 
   const baseUtilParams = useMemo<UtilParams>(() => ({
@@ -582,6 +616,10 @@ export default function CompensationOptimizer() {
     setFsa(Math.round(p.fsa / 100) * 100);
     setIra(Math.round(p.ira / 500) * 500);
     setMegaBack(Math.round(p.megaBack / 500) * 500);
+    if (spouseEnabled && !spouseCareerBreak && p.spouseK401Opt !== undefined) {
+      setSpouseK401(Math.round(p.spouseK401Opt / 500) * 500);
+      setSpouseIra(Math.round((p.spouseIraOpt ?? 0) / 500) * 500);
+    }
   };
 
   const sweepData = useMemo(() => sensitivitySweep(sweepParam, cfg, baseUtilParams, constraints), [sweepParam, cfg, baseUtilParams, constraints]);
@@ -622,6 +660,10 @@ export default function CompensationOptimizer() {
       { label: "FSA Contribution",    cur: fsa,                opt: optimized.params.fsa,              color: C.blue },
       { label: "IRA Contribution",    cur: ira,                opt: optimized.params.ira,              color: C.purple },
       { label: "Mega Backdoor Roth",  cur: megaBack,           opt: optimized.params.megaBack,         color: C.purple },
+      ...(spouseEnabled && !spouseCareerBreak ? [
+        { label: "Spouse 401(k)",     cur: spouseK401,         opt: optimized.params.spouseK401Opt ?? spouseK401, color: C.blue },
+        { label: "Spouse IRA",        cur: spouseIra,          opt: optimized.params.spouseIraOpt  ?? spouseIra,  color: C.purple },
+      ] : []),
       { label: "Total Taxes",         cur: current.taxTotal,   opt: optimized.result.taxTotal,         color: (d: number) => d <= 0 ? C.accent : C.red },
       { label: "Employer Match",      cur: current.employerMatch, opt: optimized.result.employerMatch, color: C.gold },
       { label: "Net Take-Home",       cur: current.net,        opt: optimized.result.net,              color: (d: number) => d >= 0 ? C.accent : C.orange },
@@ -632,7 +674,7 @@ export default function CompensationOptimizer() {
       const color = typeof r.color === "function" ? r.color(delta) : r.color;
       return { ...r, delta, color };
     });
-  }, [optimized, k401, hsa, fsa, ira, megaBack, current]);
+  }, [optimized, k401, hsa, fsa, ira, megaBack, current, spouseEnabled, spouseCareerBreak, spouseK401, spouseIra]);
 
   const lifetimeSims = useMemo(() => {
     const baseInput: LifetimeInput = {
@@ -1547,21 +1589,51 @@ export default function CompensationOptimizer() {
                 </div>
                 {spouseEnabled ? (
                   <>
-                    <Sl label="Spouse Base Salary"   value={spouseBase}   min={30000} max={800000} step={5000}  onChange={setSpouseBase}   color={C.accent} />
-                    <Sl label="Spouse AIP % of Base" value={spouseAipPct} min={0}     max={150}    step={1}     onChange={setSpouseAipPct} color={C.accent}
-                      fmt={v => `${v}%`} hint={`Spouse gross = ${fmt(spouseGrossTotal)}`} />
+                    {/* Career break toggle */}
+                    <div style={{ marginBottom: 14, background: spouseCareerBreak ? C.red + "11" : C.surfaceAlt, border: `1px solid ${spouseCareerBreak ? C.red + "55" : C.border}`, borderRadius: 8, padding: "10px 14px" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                        <input type="checkbox" checked={spouseCareerBreak} onChange={e => setSpouseCareerBreak(e.target.checked)} style={{ accentColor: C.red }} />
+                        <div>
+                          <div style={{ fontSize: 12, color: spouseCareerBreak ? C.red : C.text, fontFamily: mono, fontWeight: 600 }}>
+                            Simulate Career Break
+                          </div>
+                          <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
+                            {spouseCareerBreak
+                              ? `Spouse income zeroed — household loses ${fmt(spouseGrossTotal)} gross`
+                              : "Model one partner stopping work; keeps their account inputs intact"}
+                          </div>
+                        </div>
+                      </label>
+                      {spouseCareerBreak && (
+                        <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                          {[
+                            { l: "Lost Gross",  v: -spouseGrossTotal,    c: C.red },
+                            { l: "Lost Match",  v: -spouseMatchAmt,      c: C.orange },
+                          ].map(x => (
+                            <div key={x.l} style={{ textAlign: "center" }}>
+                              <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 2 }}>{x.l}</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: x.c, fontFamily: mono }}>{fmt(Math.abs(x.v))}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <Sl label="Spouse Base Salary"   value={spouseBase}   min={30000} max={800000} step={5000}  onChange={setSpouseBase}   color={spouseCareerBreak ? C.muted : C.accent} disabled={spouseCareerBreak} />
+                    <Sl label="Spouse AIP % of Base" value={spouseAipPct} min={0}     max={150}    step={1}     onChange={setSpouseAipPct} color={spouseCareerBreak ? C.muted : C.accent}
+                      fmt={v => `${v}%`} hint={spouseCareerBreak ? "Career break active" : `Spouse gross = ${fmt(spouseGrossTotal)}`} disabled={spouseCareerBreak} />
                     <Sl label="Spouse 401(k)"        value={spouseK401}   min={0} max={LIM.k401} step={500}    onChange={setSpouseK401}   color={C.blue} />
                     <Sl label="Spouse IRA"           value={spouseIra}    min={0} max={LIM.ira}  step={500}    onChange={setSpouseIra}    color={C.purple} />
                     <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, marginTop: 6 }}>Spouse Match</div>
-                    <Sl label="Match %" value={spouseMatchPct} min={0} max={200} step={5}   onChange={setSpouseMatchPct} color={C.gold} fmt={v => `${v}%`} />
+                    <Sl label="Match %" value={spouseMatchPct} min={0} max={200} step={5}   onChange={setSpouseMatchPct} color={C.gold} fmt={v => `${v}%`} disabled={spouseCareerBreak} />
                     <Sl label="Match Cap (% salary)" value={spouseMatchCap} min={0} max={20} step={0.5} onChange={setSpouseMatchCap} color={C.gold} fmt={v => `${v}%`}
-                      hint={`Cap = ${fmt(spouseBase * spouseMatchCap / 100)} · Match = ${fmt(spouseMatchAmt)}`} />
+                      hint={`Cap = ${fmt(spouseBase * spouseMatchCap / 100)} · Match = ${fmt(spouseMatchAmt)}`} disabled={spouseCareerBreak} />
                     <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "12px 14px", marginTop: 6 }}>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                         {[
-                          { l: "Gross",     v: spouseGrossTotal,      c: C.text },
-                          { l: "Match",     v: spouseMatchAmt,        c: C.gold },
-                          { l: "Est. Net",  v: cfg.spouseNetAnnual,   c: C.accent },
+                          { l: "Gross",     v: spouseCareerBreak ? 0 : spouseGrossTotal,    c: spouseCareerBreak ? C.muted : C.text },
+                          { l: "Match",     v: spouseCareerBreak ? 0 : spouseMatchAmt,      c: spouseCareerBreak ? C.muted : C.gold },
+                          { l: "Est. Net",  v: cfg.spouseNetAnnual,                         c: spouseCareerBreak ? C.muted : C.accent },
                         ].map(x => (
                           <div key={x.l} style={{ textAlign: "center" }}>
                             <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 3 }}>{x.l}</div>
@@ -1652,7 +1724,7 @@ export default function CompensationOptimizer() {
 
       <div className="co-footer-pad" style={{ fontSize: 10, color: C.muted, fontFamily: mono, lineHeight: 1.7 }}>
         2024 federal brackets (IRS Rev. Proc. 2023-34) · {stateName} state tax · SS wage base {fmt(FEDERAL_2024.socialSecurity.wageBase)} ·
-        Utility function uses coordinate descent over 401k/HSA/FSA/IRA/MegaBack parameters with PV of retirement contributions. ·
+        Utility function uses coordinate descent over 401k/HSA/FSA/IRA/MegaBack + spousal 401k/IRA (when enabled) with PV of retirement contributions. ·
         Not financial or tax advice. Consult a CPA/CFP.
       </div>
     </div>
