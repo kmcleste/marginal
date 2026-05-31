@@ -9,12 +9,13 @@
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "paths": {
       "@marginal/math": ["./shared/math/index.ts"],
       "@marginal/theme": ["./shared/theme/tokens.ts"],
       "@marginal/components": ["./shared/components/index.ts"]
     }
   },
-  "include": ["shared", "tools"],
+  "include": ["shared", "tools", "app"],
   "exclude": ["node_modules", "dist"]
 }
