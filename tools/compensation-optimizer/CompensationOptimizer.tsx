@@ -146,13 +146,15 @@ function computeUtility(params: UtilParams, cfg: UtilCfg) {
 
   const liquidityPenalty = net < liquidityFloor ? (liquidityFloor - net) * 5 : 0;
 
-  const fv = (amount: number, r: number, n: number) => amount * (Math.pow(1 + r, n) - 1) / r * (1 + r);
-  const pv = (fvVal: number) => fvVal / Math.pow(1 + discountRate, retireHorizon);
+  // Lump-sum growth premium: amount × ((1+r)^n / (1+d)^n − 1)
+  // Extra PV created by investing this year's contribution at r vs consuming at discount rate d.
+  const G = (amount: number) =>
+    amount * (Math.pow(1 + expectedReturn, retireHorizon) / Math.pow(1 + discountRate, retireHorizon) - 1);
 
-  const k401Fv = pv(fv(k401 + employerMatch, expectedReturn, retireHorizon));
-  const megaFv = pv(fv(megaBack, expectedReturn, retireHorizon)) * 1.15;
-  const hsaFv  = pv(fv(hsa, expectedReturn, retireHorizon)) * 1.3;
-  const iraFv  = pv(fv(ira, expectedReturn, retireHorizon)) * 1.1;
+  const k401Fv = G(k401 + employerMatch);
+  const megaFv = G(megaBack) * 1.15;
+  const hsaFv  = G(hsa) * 1.3;
+  const iraFv  = G(ira) * 1.1;
 
   const utility = net + k401Fv + megaFv + hsaFv + iraFv + employerMatch - liquidityPenalty;
 
@@ -568,10 +570,11 @@ export default function CompensationOptimizer() {
                 </div>
                 <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, marginBottom: 12, lineHeight: 1.8, background: C.surfaceAlt, padding: "8px 12px", borderRadius: 6 }}>
                   U = net_takehome<br />
-                  &nbsp;&nbsp;+ PV(k401 × (1+r)ⁿ) + PV(match × (1+r)ⁿ)<br />
-                  &nbsp;&nbsp;+ PV(hsa × 1.3 × (1+r)ⁿ) [triple tax bonus]<br />
-                  &nbsp;&nbsp;+ PV(ira × 1.1 × (1+r)ⁿ) [Roth bonus]<br />
-                  &nbsp;&nbsp;+ PV(mega × 1.15 × (1+r)ⁿ)<br />
+                  &nbsp;&nbsp;+ (k401+match) × G  [lump-sum growth premium]<br />
+                  &nbsp;&nbsp;+ hsa × 1.3 × G    [triple tax advantage]<br />
+                  &nbsp;&nbsp;+ ira × 1.1 × G    [Roth tax-free growth]<br />
+                  &nbsp;&nbsp;+ mega × 1.15 × G<br />
+                  &nbsp;&nbsp;where G = (1+r)ⁿ/(1+d)ⁿ − 1<br />
                   &nbsp;&nbsp;− penalty(net &lt; floor)
                 </div>
                 {[

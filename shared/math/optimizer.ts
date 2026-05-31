@@ -40,7 +40,8 @@ export interface OptimizerConstraints {
 }
 
 export interface OptimizerParams {
-  discountRate: number; // e.g. 0.07 for 7% expected return
+  expectedReturn: number; // e.g. 0.07 for 7% expected asset return
+  discountRate: number; // personal discount rate — e.g. HYSA rate or time preference
   yearsToRetirement: number;
   taxRateNow: number; // combined marginal rate this year
   taxRateRetirement: number; // expected marginal rate in retirement
@@ -60,24 +61,22 @@ export interface OptimizationResult {
 // ─── Utility Function ─────────────────────────────────────────────────────────
 
 /**
- * Present value of the tax-deferral or tax-free growth premium.
+ * Lump-sum growth premium: extra PV created by investing this year's contribution
+ * at expectedReturn vs consuming it now (discounted at personalDiscountRate).
  *
- * For traditional (pre-tax): the benefit is deferral — pay taxes later at
- * (presumably) lower rates. PV of that benefit per dollar contributed today:
- *   pvBenefit = (taxRateNow - taxRateRetirement) * FV factor
+ *   G = contribution × ((1+r)^n / (1+d)^n − 1)
  *
- * For Roth: benefit is permanent tax-free growth.
- * This function handles both via the callerʼs tax rate assumptions.
+ * When r > d (return exceeds discount rate), G > 0 — positive utility bonus.
+ * When r = d, G = 0 — indifferent between investing and consuming.
  */
 export function growthPremiumPV(
   contribution: number,
   params: OptimizerParams,
 ): number {
-  const fvFactor = Math.pow(1 + params.discountRate, params.yearsToRetirement);
-  // Net benefit: difference between paying taxes now vs later, on the grown amount
-  const taxDeferralBenefit =
-    contribution * fvFactor * (params.taxRateNow - params.taxRateRetirement);
-  return taxDeferralBenefit / Math.pow(1 + params.discountRate, params.yearsToRetirement);
+  const r = params.expectedReturn;
+  const d = params.discountRate;
+  const n = params.yearsToRetirement;
+  return contribution * (Math.pow(1 + r, n) / Math.pow(1 + d, n) - 1);
 }
 
 /**
