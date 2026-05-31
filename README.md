@@ -45,7 +45,7 @@ marginal is built on six principles:
 ## Repository Structure
 
 ```
-wealth-kit/
+marginal/
 ├── tools/                     # React frontend tools
 │   ├── compensation-optimizer/
 │   ├── rsu-equity-modeler/

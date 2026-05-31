@@ -54,7 +54,7 @@ export default function Home() {
             color: "#e8e8f0",
           }}
         >
-          WealthKit
+          Marginal
         </h1>
         <p style={{ color: "#9090a8", lineHeight: 1.6, maxWidth: "600px" }}>
           Open-source financial tools for self-directed high earners. The math

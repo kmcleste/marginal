@@ -25,7 +25,7 @@ class ScrapeResult:
 def fetch_url(url: str, timeout: int = 30) -> ScrapeResult:
     try:
         r = httpx.get(url, timeout=timeout, follow_redirects=True, headers={
-            "User-Agent": "Mozilla/5.0 (compatible; WealthKit-TaxPipeline/1.0)"
+            "User-Agent": "Mozilla/5.0 (compatible; Marginal-TaxPipeline/1.0)"
         })
         r.raise_for_status()
         return ScrapeResult(url=url, html=r.text, tier=2, success=True)

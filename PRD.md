@@ -1,6 +1,6 @@
 # Product Requirements Document
 
-## WealthKit — Open-Source Financial Tools for Self-Directed High Earners
+## Marginal — Open-Source Financial Tools for Self-Directed High Earners
 
 **Status:** Draft v0.1
 **Last updated:** May 2026
@@ -11,7 +11,7 @@
 
 ## 1. Summary
 
-WealthKit is a curated, open-source repository of client-side financial planning tools targeted at analytically-minded high earners who want to self-manage their compensation, taxes, and investments. Each tool treats personal finance as a solvable optimization problem rather than a passive dashboard to observe. Tools are fully client-side (no account linking, no data retention, no auth), share a common design language, and are backed by a transparent, testable math layer.
+Marginal is a curated, open-source repository of client-side financial planning tools targeted at analytically-minded high earners who want to self-manage their compensation, taxes, and investments. Each tool treats personal finance as a solvable optimization problem rather than a passive dashboard to observe. Tools are fully client-side (no account linking, no data retention, no auth), share a common design language, and are backed by a transparent, testable math layer.
 
 A secondary component is an agentic tax-data pipeline that maintains accurate, location-specific tax data across all 50 US states with minimal annual human effort.
 
@@ -212,7 +212,7 @@ The pipeline classifies failures to drive appropriate remediation:
 ### 9.1 Repository Structure
 
 ```
-wealth-kit/
+marginal/
 ├── README.md                  # philosophy + tool index
 ├── PRD.md                     # this document
 ├── LICENSE                    # MIT
@@ -334,7 +334,7 @@ wealth-kit/
 
 ## 13. Open Questions
 
-- Repo name: `wealthkit`, `alphaledger`, `rational-wealth`, `high-earner-tools`, or other?
+- Repo name: `marginal` ✓
 - Should tools share a single deployed site (e.g., GitHub Pages / Vercel) or remain standalone artifacts?
 - How much (if any) opt-in local persistence is worth supporting?
 - Is the agentic pipeline better as part of this repo or a standalone library?

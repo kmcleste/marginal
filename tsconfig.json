@@ -10,9 +10,9 @@
     "noImplicitOverride": true,
     "skipLibCheck": true,
     "paths": {
-      "@wealthkit/math": ["./shared/math/index.ts"],
-      "@wealthkit/theme": ["./shared/theme/tokens.ts"],
-      "@wealthkit/components": ["./shared/components/index.ts"]
+      "@marginal/math": ["./shared/math/index.ts"],
+      "@marginal/theme": ["./shared/theme/tokens.ts"],
+      "@marginal/components": ["./shared/components/index.ts"]
     }
   },
   "include": ["shared", "tools"],
