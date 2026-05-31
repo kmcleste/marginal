@@ -391,7 +391,8 @@ function Sparkline({ data, width = 120, height = 32, color = C.accent, valueKey 
     return `${x},${y}`;
   }).join(" ");
   return (
-    <svg width={width} height={height} style={{ overflow: "visible" }}>
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none"
+      style={{ display: "block", width: "100%", height, overflow: "visible" }}>
       <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" />
       <polyline points={`0,${height} ${pts} ${width},${height}`} fill={color + "15"} strokeWidth={0} />
     </svg>
