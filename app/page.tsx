@@ -29,6 +29,13 @@ const tools: Array<{ slug: string; name: string; description: string; status: "b
       "FI number, coast-FI, safe withdrawal rate stress testing, and sequence-of-returns risk.",
     status: "built" as const,
   },
+  {
+    slug: "tax-loss-harvester",
+    name: "Tax-Loss Harvester",
+    description:
+      "Wash-sale-aware harvest modeling: select losing positions, IRS netting order, replacement ETF suggestions, and NPV of tax deferral alpha.",
+    status: "built" as const,
+  },
 ];
 
 export default function Home() {
