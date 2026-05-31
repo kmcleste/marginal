@@ -1,8 +1,8 @@
-# WealthKit
+# marginal
 
 > Open-source financial tools for self-directed high earners.
 
-WealthKit is a curated suite of client-side financial planning tools built for analytically-minded professionals who want to *tune parameters* rather than be handed a pie chart. Every tool is a transparent, inspectable model — the math is the product.
+marginal is a curated suite of client-side financial planning tools built for analytically-minded professionals who want to *tune parameters* rather than be handed a pie chart. Every tool is a transparent, inspectable model — the math is the product.
 
 **Zero data retention. No account linking. No auth. No backend.**
 
@@ -18,7 +18,7 @@ There is a structural gap in personal finance tooling:
 
 High earners are simultaneously the most underserved by existing tools and the most skeptical of them. They want to see the math, control the inputs, and trust that the calculations are correct.
 
-WealthKit is built on six principles:
+marginal is built on six principles:
 
 1. **The math is the product.** Every calculation is inspectable, documented, and unit-tested.
 2. **Client-side only.** No data leaves the browser.
