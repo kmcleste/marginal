@@ -676,7 +676,7 @@ export default function CompensationOptimizer() {
               Objective: maximize utility(net_pay, match_capture, tax_alpha, retirement_PV) subject to IRS + liquidity constraints
             </div>
           </div>
-          <div style={{ display: "flex", gap: 20 }}>
+          <div style={{ display: "flex", gap: 0 }}>
             {(spouseEnabled || fixedCostAnnual > 0 ? [
               { label: "HH Gross",   val: fmt(gross + spouseGrossTotal),      c: C.text },
               { label: "HH Net",     val: fmt(current.householdNet),           c: C.accent },
@@ -688,10 +688,15 @@ export default function CompensationOptimizer() {
               { label: "Net/yr",   val: fmt(current.net),        c: C.accent },
               { label: "Match/yr", val: fmt(matchAmt),           c: C.gold },
               { label: "Utility",  val: fmtK(current.utility),   c: C.blue },
-            ]).map(x => (
-              <div key={x.label} style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 9, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase" }}>{x.label}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: x.c, fontFamily: mono }}>{x.val}</div>
+            ]).map((x, i) => (
+              <div key={x.label} style={{
+                textAlign: "right",
+                paddingLeft: 20, paddingRight: 4,
+                borderLeft: i > 0 ? `1px solid ${C.border}` : "none",
+                marginLeft: i > 0 ? 4 : 0,
+              }}>
+                <div style={{ fontSize: 9, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.06em" }}>{x.label}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: x.c, fontFamily: mono }}>{x.val}</div>
               </div>
             ))}
           </div>
@@ -763,14 +768,14 @@ export default function CompensationOptimizer() {
                 <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>
                   Utility Function Decomposition
                 </div>
-                <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, marginBottom: 12, lineHeight: 1.8, background: C.surfaceAlt, padding: "8px 12px", borderRadius: 6 }}>
-                  U = net_takehome<br />
-                  &nbsp;&nbsp;+ (k401+match) × G  [lump-sum growth premium]<br />
-                  &nbsp;&nbsp;+ hsa × 1.3 × G    [triple tax advantage]<br />
-                  &nbsp;&nbsp;+ ira × 1.1 × G    [Roth tax-free growth]<br />
-                  &nbsp;&nbsp;+ mega × 1.15 × G<br />
-                  &nbsp;&nbsp;where G = (1+r)ⁿ/(1+d)ⁿ − 1<br />
-                  &nbsp;&nbsp;− penalty(net &lt; floor)
+                <div style={{ fontSize: 11, color: C.textDim, fontFamily: mono, marginBottom: 14, lineHeight: 2, background: C.surfaceAlt, padding: "10px 14px", borderRadius: 6, borderLeft: `2px solid ${C.border}` }}>
+                  <span style={{ color: C.accent }}>U</span> = net_takehome<br />
+                  &nbsp;&nbsp;+ (k401+match) × <span style={{ color: C.blue }}>G</span><br />
+                  &nbsp;&nbsp;+ hsa × 1.3 × <span style={{ color: C.blue }}>G</span> &nbsp;<span style={{ color: C.muted }}>· triple tax</span><br />
+                  &nbsp;&nbsp;+ ira × 1.1 × <span style={{ color: C.purple }}>G</span> &nbsp;<span style={{ color: C.muted }}>· Roth</span><br />
+                  &nbsp;&nbsp;+ mega × 1.15 × <span style={{ color: C.purple }}>G</span><br />
+                  &nbsp;&nbsp;where <span style={{ color: C.blue }}>G</span> = (1+r)ⁿ/(1+d)ⁿ − 1 &nbsp;<span style={{ color: C.muted }}>· r={expectedReturn}% d={discountRate}% n={retireHorizon}</span><br />
+                  &nbsp;&nbsp;− <span style={{ color: C.red }}>penalty</span>(discretionary &lt; floor)
                 </div>
                 {[
                   { label: spouseEnabled ? "Primary Net" : "Net Take-Home", val: current.net,             color: C.accent },
@@ -786,12 +791,12 @@ export default function CompensationOptimizer() {
                 ].map((r, i) => {
                   const barW = Math.max(0, Math.abs(r.val) / Math.abs(current.utility) * 100);
                   return (
-                    <div key={i} style={{ marginBottom: 6 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
-                        <span style={{ fontSize: 10, color: C.textDim, fontFamily: mono }}>{r.label}</span>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: r.color, fontFamily: mono }}>{fmt(r.val)}</span>
+                    <div key={i} style={{ marginBottom: 9 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                        <span style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono }}>{r.label}</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: r.color, fontFamily: mono }}>{fmt(r.val)}</span>
                       </div>
-                      <div style={{ height: 3, background: C.muted + "33", borderRadius: 2 }}>
+                      <div style={{ height: 4, background: C.muted + "33", borderRadius: 2 }}>
                         <div style={{ height: "100%", width: `${Math.min(100, barW)}%`, background: r.color, borderRadius: 2 }} />
                       </div>
                     </div>
@@ -1345,49 +1350,49 @@ export default function CompensationOptimizer() {
                 </Card>
 
                 {/* Metrics grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }}>
-                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 6 }}>Portfolio at {retireAge}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 12 }}>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.07em" }}>Portfolio at {retireAge}</div>
                     {scenarios.map(s => (
-                      <div key={s.key} style={{ fontSize: 11, color: s.color, fontFamily: mono }}>{s.label.split(" ")[0]}: {fmtK(portfolioAt(s.sim))}</div>
+                      <div key={s.key} style={{ fontSize: 12, color: s.color, fontFamily: mono, marginBottom: 3 }}>{s.label.split(" ")[0]}: {fmtK(portfolioAt(s.sim))}</div>
                     ))}
                   </div>
-                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>FI Crossover (Base)</div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: fiAge ? C.accent : C.muted, fontFamily: mono }}>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 6, letterSpacing: "0.07em" }}>FI Crossover (Base)</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: fiAge ? C.accent : C.muted, fontFamily: mono, marginBottom: 4 }}>
                       {fiAge ? `Age ${fiAge}` : "—"}
                     </div>
-                    <div style={{ fontSize: 10, color: C.mutedLight }}>
-                      {fiAge ? `${fiAge - age} yrs from now` : "Investment income never exceeds salary in range"}
+                    <div style={{ fontSize: 10, color: C.mutedLight, fontFamily: mono }}>
+                      {fiAge ? `${fiAge - age} yrs from now` : "Investment income never exceeds salary"}
                     </div>
                   </div>
-                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 6 }}>Survivability to {lifeExpectancy}</div>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.07em" }}>Survivability to {lifeExpectancy}</div>
                     {scenarios.map(s => {
                       const dep = depleteAt(s.sim);
                       return (
-                        <div key={s.key} style={{ fontSize: 11, color: dep ? C.red : s.color, fontFamily: mono }}>
-                          {s.label.split(" ")[0]}: {dep ? `depletes age ${dep}` : `✓ survives`}
+                        <div key={s.key} style={{ fontSize: 12, color: dep ? C.red : s.color, fontFamily: mono, marginBottom: 3 }}>
+                          {s.label.split(" ")[0]}: {dep ? `depletes ${dep}` : `✓ survives`}
                         </div>
                       );
                     })}
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>Sustainable Income (Base, 4% SWR)</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: C.accent, fontFamily: mono }}>{fmt(basePortfolio * 0.04)}</div>
-                    <div style={{ fontSize: 10, color: C.mutedLight, fontFamily: mono }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 6, letterSpacing: "0.07em" }}>Sustainable Income (Base, 4% SWR)</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: C.accent, fontFamily: mono, marginBottom: 6 }}>{fmt(basePortfolio * 0.04)}</div>
+                    <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono }}>
                       + {fmt(ssAtClaim)} SS (age {ssClaimAge}) = <span style={{ color: C.accent }}>{fmt(basePortfolio * 0.04 + ssAtClaim)}</span> total
                     </div>
                   </div>
-                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>Annual Contributions (current)</div>
-                    <div style={{ fontSize: 11, color: C.blue,   fontFamily: mono }}>401k+match: {fmt(k401 + matchAmt)}</div>
-                    <div style={{ fontSize: 11, color: C.purple, fontFamily: mono }}>Roth+Mega: {fmt(ira + megaBack)}</div>
-                    <div style={{ fontSize: 11, color: C.blue,   fontFamily: mono }}>HSA: {fmt(hsa)}</div>
-                    <div style={{ fontSize: 11, color: C.accent, fontFamily: mono }}>Taxable surplus: {fmt(Math.max(0, current.net - annualSpend))}</div>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "14px 16px" }}>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.07em" }}>Annual Contributions (current)</div>
+                    <div style={{ fontSize: 12, color: C.blue,   fontFamily: mono, marginBottom: 4 }}>401k+match: {fmt(k401 + matchAmt)}</div>
+                    <div style={{ fontSize: 12, color: C.purple, fontFamily: mono, marginBottom: 4 }}>Roth+Mega: {fmt(ira + megaBack)}</div>
+                    <div style={{ fontSize: 12, color: C.blue,   fontFamily: mono, marginBottom: 4 }}>HSA: {fmt(hsa)}</div>
+                    <div style={{ fontSize: 12, color: C.accent, fontFamily: mono }}>Taxable surplus: {fmt(Math.max(0, current.net - annualSpend))}</div>
                   </div>
                 </div>
 
@@ -1438,6 +1443,8 @@ export default function CompensationOptimizer() {
         {/* ══ CONFIG ══ */}
         {tab === "config" && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+            {/* ── Left: income inputs → tax result ── */}
             <div>
               <Card style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Compensation</div>
@@ -1488,6 +1495,30 @@ export default function CompensationOptimizer() {
               </Card>
 
               <Card>
+                <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Tax Summary</div>
+                {[
+                  { l: "Gross Income",     v: gross,                    c: C.text },
+                  { l: "AGI",              v: annTax.agi,               c: C.textDim },
+                  { l: "Fed Taxable",      v: annTax.fedTaxable,        c: C.textDim },
+                  { l: "Federal Tax",      v: annTax.fTax,              c: C.red },
+                  { l: `${stateName} State Tax`, v: annTax.nTax,        c: C.orange },
+                  { l: "Social Security",  v: annTax.ss,                c: C.purple },
+                  { l: "Medicare",         v: annTax.med,               c: C.purple },
+                  { l: "Total Tax",        v: annTax.total,             c: C.red, b: true },
+                  { l: "Effective Rate",   v: annTax.total / gross,     c: C.orange, isPct: true },
+                  { l: "Marginal Fed Rate",v: annTax.marginal,          c: C.red, isPct: true },
+                ].map((r, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: `1px solid ${C.border}22`, fontFamily: mono, fontSize: 11 }}>
+                    <span style={{ color: C.textDim, fontWeight: r.b ? 600 : 400 }}>{r.l}</span>
+                    <span style={{ color: r.c, fontWeight: r.b ? 700 : 400 }}>{r.isPct ? pct(r.v) : fmt(r.v)}</span>
+                  </div>
+                ))}
+              </Card>
+            </div>
+
+            {/* ── Right: household & obligations ── */}
+            <div>
+              <Card style={{ marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em" }}>Spouse / Partner</div>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
@@ -1504,53 +1535,30 @@ export default function CompensationOptimizer() {
                       fmt={v => `${v}%`} hint={`Spouse gross = ${fmt(spouseGrossTotal)}`} />
                     <Sl label="Spouse 401(k)"        value={spouseK401}   min={0} max={LIM.k401} step={500}    onChange={setSpouseK401}   color={C.blue} />
                     <Sl label="Spouse IRA"           value={spouseIra}    min={0} max={LIM.ira}  step={500}    onChange={setSpouseIra}    color={C.purple} />
-                    <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, marginTop: 4 }}>Spouse Match</div>
+                    <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, marginTop: 6 }}>Spouse Match</div>
                     <Sl label="Match %" value={spouseMatchPct} min={0} max={200} step={5}   onChange={setSpouseMatchPct} color={C.gold} fmt={v => `${v}%`} />
                     <Sl label="Match Cap (% salary)" value={spouseMatchCap} min={0} max={20} step={0.5} onChange={setSpouseMatchCap} color={C.gold} fmt={v => `${v}%`}
                       hint={`Cap = ${fmt(spouseBase * spouseMatchCap / 100)} · Match = ${fmt(spouseMatchAmt)}`} />
-                    <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px", marginTop: 4 }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                    <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "12px 14px", marginTop: 6 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
                         {[
                           { l: "Gross",     v: spouseGrossTotal,      c: C.text },
                           { l: "Match",     v: spouseMatchAmt,        c: C.gold },
                           { l: "Est. Net",  v: cfg.spouseNetAnnual,   c: C.accent },
                         ].map(x => (
                           <div key={x.l} style={{ textAlign: "center" }}>
-                            <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>{x.l}</div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: x.c, fontFamily: mono }}>{fmt(x.v)}</div>
+                            <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 3 }}>{x.l}</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: x.c, fontFamily: mono }}>{fmt(x.v)}</div>
                           </div>
                         ))}
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div style={{ fontSize: 11, color: C.muted, fontFamily: mono, padding: "8px 0" }}>
+                  <div style={{ fontSize: 11, color: C.muted, fontFamily: mono, padding: "8px 0", lineHeight: 1.6 }}>
                     Enable to add a second earner. Their income, taxes, and match are computed independently and added to household net.
                   </div>
                 )}
-              </Card>
-            </div>
-
-            <div>
-              <Card style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Tax Summary</div>
-                {[
-                  { l: "Gross Income",     v: gross,                    c: C.text },
-                  { l: "AGI",              v: annTax.agi,               c: C.textDim },
-                  { l: "Fed Taxable",      v: annTax.fedTaxable,        c: C.textDim },
-                  { l: "Federal Tax",      v: annTax.fTax,              c: C.red },
-                  { l: `${stateName} State Tax`, v: annTax.nTax,        c: C.orange },
-                  { l: "Social Security",  v: annTax.ss,                c: C.purple },
-                  { l: "Medicare",         v: annTax.med,               c: C.purple },
-                  { l: "Total Tax",        v: annTax.total,             c: C.red, b: true },
-                  { l: "Effective Rate",   v: annTax.total / gross,     c: C.orange, isPct: true },
-                  { l: "Marginal Fed Rate",v: annTax.marginal,          c: C.red, isPct: true },
-                ].map((r, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: `1px solid ${C.border}22`, fontFamily: mono, fontSize: 11 }}>
-                    <span style={{ color: C.textDim, fontWeight: r.b ? 600 : 400 }}>{r.l}</span>
-                    <span style={{ color: r.c, fontWeight: r.b ? 700 : 400 }}>{r.isPct ? pct(r.v) : fmt(r.v)}</span>
-                  </div>
-                ))}
               </Card>
 
               <Card style={{ marginBottom: 12 }}>
@@ -1559,24 +1567,24 @@ export default function CompensationOptimizer() {
                 <Sl label="Car Payment 1"     value={carPayment1} min={0} max={2000}  step={50}  onChange={setCarPayment1} color={C.orange} />
                 <Sl label="Car Payment 2"     value={carPayment2} min={0} max={2000}  step={50}  onChange={setCarPayment2} color={C.orange} />
                 <Sl label="Other Fixed Costs" value={otherFixed}  min={0} max={5000}  step={100} onChange={setOtherFixed}  color={C.orange} hint="Insurance, subscriptions, loan payments, etc." />
-                <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "12px 14px", marginTop: 4 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "12px 14px", marginTop: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>Total Fixed/mo</div>
+                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 3 }}>Total Fixed/mo</div>
                       <div style={{ fontSize: 18, fontWeight: 700, color: C.orange, fontFamily: mono }}>{fmt(fixedCostMonthly)}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>Annual Obligation</div>
+                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 3 }}>Annual Obligation</div>
                       <div style={{ fontSize: 18, fontWeight: 700, color: C.orange, fontFamily: mono }}>{fmt(fixedCostAnnual)}</div>
                     </div>
                   </div>
-                  <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 10, paddingTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 12, paddingTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>{spouseEnabled ? "HH Net" : "Net"} After Fixed</div>
+                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 3 }}>{spouseEnabled ? "HH Net" : "Net"} After Fixed</div>
                       <div style={{ fontSize: 15, fontWeight: 700, color: current.discretionary >= 0 ? C.accent : C.red, fontFamily: mono }}>{fmt(current.discretionary)}</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>Fixed as % of {spouseEnabled ? "HH " : ""}Net</div>
+                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 3 }}>Fixed as % of {spouseEnabled ? "HH " : ""}Net</div>
                       <div style={{ fontSize: 15, fontWeight: 700, color: fixedCostAnnual / Math.max(1, current.householdNet) > 0.5 ? C.red : C.mutedLight, fontFamily: mono }}>
                         {pct(fixedCostAnnual / Math.max(1, current.householdNet))}
                       </div>
@@ -1603,18 +1611,18 @@ export default function CompensationOptimizer() {
               <Card>
                 <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Annual Contribution Summary</div>
                 {[
-                  { l: "401(k) Employee",         v: k401,                    c: C.blue },
-                  { l: "401(k) Employer (vested)", v: matchAmt,               c: C.gold },
-                  { l: "401(k) Total",             v: k401 + matchAmt,        c: C.blue, b: true },
-                  { l: "HSA",                      v: hsa,                    c: C.blue },
-                  { l: "FSA",                      v: fsa,                    c: C.gold },
-                  { l: "Backdoor Roth IRA",        v: ira,                    c: C.purple },
-                  { l: "Mega Backdoor",            v: megaBack,               c: C.purple },
-                  { l: "Other Pre-tax",            v: otherPretax,            c: C.mutedMid },
+                  { l: "401(k) Employee",          v: k401,                           c: C.blue },
+                  { l: "401(k) Employer (vested)", v: matchAmt,                       c: C.gold },
+                  { l: "401(k) Total",             v: k401 + matchAmt,                c: C.blue,   b: true },
+                  { l: "HSA",                      v: hsa,                            c: C.blue },
+                  { l: "FSA",                      v: fsa,                            c: C.gold },
+                  { l: "Backdoor Roth IRA",        v: ira,                            c: C.purple },
+                  { l: "Mega Backdoor",            v: megaBack,                       c: C.purple },
+                  { l: "Other Pre-tax",            v: otherPretax,                    c: C.mutedMid },
                   { l: "Total Pre-tax",            v: k401 + hsa + fsa + otherPretax, c: C.accent, b: true },
-                  { l: "Net Take-Home",            v: current.net,            c: C.accent, b: true },
+                  { l: "Net Take-Home",            v: current.net,                    c: C.accent, b: true },
                 ].map((r, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: `1px solid ${C.border}22`, fontFamily: mono, fontSize: 11 }}>
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: `1px solid ${C.border}22`, fontFamily: mono, fontSize: 11 }}>
                     <span style={{ color: C.textDim, fontWeight: r.b ? 600 : 400 }}>{r.l}</span>
                     <span style={{ color: r.c, fontWeight: r.b ? 700 : 400 }}>{fmt(r.v)}</span>
                   </div>
