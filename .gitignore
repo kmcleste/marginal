@@ -24,6 +24,9 @@ pipeline/cache/*.png
 .DS_Store
 Thumbs.db
 
+# TypeScript build cache
+*.tsbuildinfo
+
 # IDE
 .idea/
 .vscode/
