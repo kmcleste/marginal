@@ -3,7 +3,10 @@
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -11,11 +14,36 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "paths": {
-      "@marginal/math": ["./shared/math/index.ts"],
-      "@marginal/theme": ["./shared/theme/tokens.ts"],
-      "@marginal/components": ["./shared/components/index.ts"]
-    }
+      "@marginal/math": [
+        "./shared/math/index.ts"
+      ],
+      "@marginal/theme": [
+        "./shared/theme/tokens.ts"
+      ],
+      "@marginal/components": [
+        "./shared/components/index.ts"
+      ]
+    },
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["shared", "tools", "app"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "app",
+    "shared",
+    "tools",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
