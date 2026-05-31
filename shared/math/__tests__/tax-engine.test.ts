@@ -171,8 +171,9 @@ describe("medicareTax", () => {
 
 describe("computeFederalTax — integration", () => {
   it("high-earning single filer, full picture", () => {
+    // qualifiedDividends must also be reflected in ordinaryDividends (qualified is a subset of ordinary)
     const result = computeFederalTax(
-      { wages: 300000, longTermCapitalGains: 50000, qualifiedDividends: 10000 },
+      { wages: 300000, longTermCapitalGains: 50000, ordinaryDividends: 10000, qualifiedDividends: 10000 },
       { traditional401k: 23000, hsa: 4150 },
       "single",
     );
