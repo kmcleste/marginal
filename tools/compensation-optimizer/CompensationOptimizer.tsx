@@ -130,21 +130,26 @@ interface UtilCfg {
   gross: number; bonusGross: number; status: FilingStatus;
   matchPct: number; matchCap: number; matchVestingFactor: number;
   periodsPerYear: number; stateCode: string;
+  spouseNetAnnual: number;  // spouse after-tax after-contribution income; 0 if no spouse
+  spouseMatchAmt: number;   // spouse vested employer match
+  fixedCostAnnual: number;  // total annual fixed obligations (mortgage, cars, etc.)
 }
 
 function computeUtility(params: UtilParams, cfg: UtilCfg) {
   const { k401, hsa, fsa, ira, megaBack, otherPretax, liquidityFloor, retireHorizon, expectedReturn, discountRate } = params;
-  const { gross, bonusGross, status, matchPct, matchCap, matchVestingFactor, stateCode } = cfg;
+  const { gross, bonusGross, status, matchPct, matchCap, matchVestingFactor, stateCode,
+          spouseNetAnnual, spouseMatchAmt, fixedCostAnnual } = cfg;
 
   const matchableContrib = Math.min(k401, gross * (matchCap / 100));
   const employerMatch = matchableContrib * (matchPct / 100) * matchVestingFactor;
 
   const t = calcTaxFull(gross + bonusGross, { k401, hsa, fsa, otherPretax }, status, stateCode);
 
-  const postTaxIRA = ira;
-  const net = (gross + bonusGross) - t.total - t.pretax - postTaxIRA;
+  const primaryNet  = (gross + bonusGross) - t.total - t.pretax - ira;
+  const householdNet = primaryNet + spouseNetAnnual;
+  const discretionary = householdNet - fixedCostAnnual;
 
-  const liquidityPenalty = net < liquidityFloor ? (liquidityFloor - net) * 5 : 0;
+  const liquidityPenalty = discretionary < liquidityFloor ? (liquidityFloor - discretionary) * 5 : 0;
 
   // Lump-sum growth premium: amount × ((1+r)^n / (1+d)^n − 1)
   // Extra PV created by investing this year's contribution at r vs consuming at discount rate d.
@@ -156,10 +161,11 @@ function computeUtility(params: UtilParams, cfg: UtilCfg) {
   const hsaFv  = G(hsa) * 1.3;
   const iraFv  = G(ira) * 1.1;
 
-  const utility = net + k401Fv + megaFv + hsaFv + iraFv + employerMatch - liquidityPenalty;
+  const utility = discretionary + k401Fv + megaFv + hsaFv + iraFv + employerMatch + spouseMatchAmt - liquidityPenalty;
 
   return {
-    utility, net, employerMatch, k401Fv, megaFv, hsaFv, iraFv, liquidityPenalty,
+    utility, net: primaryNet, householdNet, discretionary, fixedCostAnnual,
+    employerMatch, spouseMatchAmt, k401Fv, megaFv, hsaFv, iraFv, liquidityPenalty,
     taxTotal: t.total, marginal: t.marginal,
     effectiveRate: t.total / (gross + bonusGross),
     taxSavings: calcTaxFull(gross + bonusGross, { k401: 0, hsa: 0, fsa: 0, otherPretax }, status, stateCode).total - t.total,
@@ -470,6 +476,21 @@ export default function CompensationOptimizer() {
   const [catchup,        setCatchup]   = useState(false);
   const [megaEnabled,    setMegaEnabled] = useState(false);
 
+  // ── Spouse ──
+  const [spouseEnabled,  setSpouseEnabled]  = useState(false);
+  const [spouseBase,     setSpouseBase]     = useState(200000);
+  const [spouseAipPct,   setSpouseAipPct]   = useState(20);
+  const [spouseK401,     setSpouseK401]     = useState(23000);
+  const [spouseMatchPct, setSpouseMatchPct] = useState(100);
+  const [spouseMatchCap, setSpouseMatchCap] = useState(6);
+  const [spouseIra,      setSpouseIra]      = useState(7000);
+
+  // ── Fixed Costs ──
+  const [mortgage,    setMortgage]    = useState(3500);
+  const [carPayment1, setCarPayment1] = useState(0);
+  const [carPayment2, setCarPayment2] = useState(0);
+  const [otherFixed,  setOtherFixed]  = useState(0);
+
   // ── Lifetime Simulation ──
   const [lifeExpectancy, setLifeExpect]   = useState(90);
   const [salaryGrowth,   setSalaryGrowth] = useState(3);
@@ -498,10 +519,31 @@ export default function CompensationOptimizer() {
   const k401Max        = catchup   ? LIM.k401catch : LIM.k401;
   const iraMax         = catchup   ? LIM.iraCatch  : LIM.ira;
 
-  const cfg = useMemo<UtilCfg>(() => ({
-    gross: base, bonusGross, status, matchPct, matchCap,
-    matchVestingFactor: matchVesting / 100, periodsPerYear, stateCode,
-  }), [base, bonusGross, status, matchPct, matchCap, matchVesting, periodsPerYear, stateCode]);
+  const spouseGrossTotal = spouseEnabled ? spouseBase * (1 + spouseAipPct / 100) : 0;
+  const spouseMatchAmt   = spouseEnabled
+    ? Math.min(spouseK401, spouseBase * (spouseMatchCap / 100)) * (spouseMatchPct / 100)
+    : 0;
+  const fixedCostMonthly = mortgage + carPayment1 + carPayment2 + otherFixed;
+  const fixedCostAnnual  = fixedCostMonthly * 12;
+
+  const cfg = useMemo<UtilCfg>(() => {
+    const spGross = spouseEnabled ? spouseBase * (1 + spouseAipPct / 100) : 0;
+    const spTax   = spouseEnabled
+      ? calcTaxFull(spGross, { k401: spouseK401 }, status, stateCode)
+      : { total: 0, pretax: 0 };
+    const spNet   = spouseEnabled ? spGross - spTax.total - spTax.pretax - spouseIra : 0;
+    const spMatch = spouseEnabled
+      ? Math.min(spouseK401, spouseBase * (spouseMatchCap / 100)) * (spouseMatchPct / 100)
+      : 0;
+    const fixedAnn = (mortgage + carPayment1 + carPayment2 + otherFixed) * 12;
+    return {
+      gross: base, bonusGross, status, matchPct, matchCap,
+      matchVestingFactor: matchVesting / 100, periodsPerYear, stateCode,
+      spouseNetAnnual: spNet, spouseMatchAmt: spMatch, fixedCostAnnual: fixedAnn,
+    };
+  }, [base, bonusGross, status, matchPct, matchCap, matchVesting, periodsPerYear, stateCode,
+      spouseEnabled, spouseBase, spouseAipPct, spouseK401, spouseIra,
+      spouseMatchPct, spouseMatchCap, mortgage, carPayment1, carPayment2, otherFixed]);
 
   const baseUtilParams = useMemo<UtilParams>(() => ({
     k401, hsa, fsa, ira, megaBack, otherPretax,
@@ -635,12 +677,18 @@ export default function CompensationOptimizer() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 20 }}>
-            {([
+            {(spouseEnabled || fixedCostAnnual > 0 ? [
+              { label: "HH Gross",   val: fmt(gross + spouseGrossTotal),      c: C.text },
+              { label: "HH Net",     val: fmt(current.householdNet),           c: C.accent },
+              { label: "Fixed/mo",   val: fmt(fixedCostMonthly),              c: C.orange },
+              { label: "Discretion", val: fmt(current.discretionary),          c: C.gold },
+              { label: "Utility",    val: fmtK(current.utility),              c: C.blue },
+            ] : [
               { label: "Gross",    val: fmt(gross),              c: C.text },
               { label: "Net/yr",   val: fmt(current.net),        c: C.accent },
               { label: "Match/yr", val: fmt(matchAmt),           c: C.gold },
               { label: "Utility",  val: fmtK(current.utility),   c: C.blue },
-            ] as const).map(x => (
+            ]).map(x => (
               <div key={x.label} style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 9, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase" }}>{x.label}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: x.c, fontFamily: mono }}>{x.val}</div>
@@ -725,12 +773,15 @@ export default function CompensationOptimizer() {
                   &nbsp;&nbsp;− penalty(net &lt; floor)
                 </div>
                 {[
-                  { label: "Net Take-Home",      val: current.net,             color: C.accent },
+                  { label: spouseEnabled ? "Primary Net" : "Net Take-Home", val: current.net,             color: C.accent },
+                  ...(spouseEnabled ? [{ label: "Spouse Net",    val: cfg.spouseNetAnnual,        color: C.accent }] : []),
+                  ...(fixedCostAnnual > 0 ? [{ label: "Fixed Costs (annual)", val: -fixedCostAnnual, color: C.orange }] : []),
                   { label: "PV 401(k) + Match",  val: current.k401Fv + current.employerMatch, color: C.blue },
                   { label: "PV HSA (×1.3)",      val: current.hsaFv,           color: C.blue },
                   { label: "PV Roth IRA (×1.1)", val: current.iraFv,           color: C.purple },
                   { label: "PV Mega Backdoor",   val: current.megaFv,          color: C.purple },
                   { label: "Employer Match",     val: current.employerMatch,   color: C.gold },
+                  ...(spouseEnabled ? [{ label: "Spouse Match",  val: current.spouseMatchAmt,     color: C.gold }] : []),
                   { label: "Liquidity Penalty",  val: -current.liquidityPenalty, color: current.liquidityPenalty > 0 ? C.red : C.mutedLight },
                 ].map((r, i) => {
                   const barW = Math.max(0, Math.abs(r.val) / Math.abs(current.utility) * 100);
@@ -746,9 +797,17 @@ export default function CompensationOptimizer() {
                     </div>
                   );
                 })}
-                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 8, marginTop: 6, display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono }}>TOTAL UTILITY</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.accent, fontFamily: mono }}>{fmtK(current.utility)}</span>
+                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 8, marginTop: 6 }}>
+                  {(spouseEnabled || fixedCostAnnual > 0) && (
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono }}>DISCRETIONARY</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: C.accent, fontFamily: mono }}>{fmt(current.discretionary)}</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono }}>TOTAL UTILITY</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: C.accent, fontFamily: mono }}>{fmtK(current.utility)}</span>
+                  </div>
                 </div>
               </Card>
 
@@ -1409,7 +1468,7 @@ export default function CompensationOptimizer() {
                   fmt={v => `${v} yrs`} hint={`Retirement horizon auto-set to ${Math.max(5, 65 - age)} years`} />
               </Card>
 
-              <Card>
+              <Card style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Account Flags</div>
                 {[
                   { label: "Age 50+ catch-up contributions", checked: catchup,    set: setCatchup,    desc: `401k → ${fmt(LIM.k401catch)}, IRA → ${fmt(LIM.iraCatch)}` },
@@ -1426,6 +1485,49 @@ export default function CompensationOptimizer() {
                     </label>
                   </div>
                 ))}
+              </Card>
+
+              <Card>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em" }}>Spouse / Partner</div>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                    <input type="checkbox" checked={spouseEnabled} onChange={e => setSpouseEnabled(e.target.checked)} style={{ accentColor: C.accent }} />
+                    <span style={{ fontSize: 11, color: spouseEnabled ? C.accent : C.muted, fontFamily: mono }}>
+                      {spouseEnabled ? "Enabled" : "Disabled"}
+                    </span>
+                  </label>
+                </div>
+                {spouseEnabled ? (
+                  <>
+                    <Sl label="Spouse Base Salary"   value={spouseBase}   min={30000} max={800000} step={5000}  onChange={setSpouseBase}   color={C.accent} />
+                    <Sl label="Spouse AIP % of Base" value={spouseAipPct} min={0}     max={150}    step={1}     onChange={setSpouseAipPct} color={C.accent}
+                      fmt={v => `${v}%`} hint={`Spouse gross = ${fmt(spouseGrossTotal)}`} />
+                    <Sl label="Spouse 401(k)"        value={spouseK401}   min={0} max={LIM.k401} step={500}    onChange={setSpouseK401}   color={C.blue} />
+                    <Sl label="Spouse IRA"           value={spouseIra}    min={0} max={LIM.ira}  step={500}    onChange={setSpouseIra}    color={C.purple} />
+                    <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10, marginTop: 4 }}>Spouse Match</div>
+                    <Sl label="Match %" value={spouseMatchPct} min={0} max={200} step={5}   onChange={setSpouseMatchPct} color={C.gold} fmt={v => `${v}%`} />
+                    <Sl label="Match Cap (% salary)" value={spouseMatchCap} min={0} max={20} step={0.5} onChange={setSpouseMatchCap} color={C.gold} fmt={v => `${v}%`}
+                      hint={`Cap = ${fmt(spouseBase * spouseMatchCap / 100)} · Match = ${fmt(spouseMatchAmt)}`} />
+                    <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px", marginTop: 4 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                        {[
+                          { l: "Gross",     v: spouseGrossTotal,      c: C.text },
+                          { l: "Match",     v: spouseMatchAmt,        c: C.gold },
+                          { l: "Est. Net",  v: cfg.spouseNetAnnual,   c: C.accent },
+                        ].map(x => (
+                          <div key={x.l} style={{ textAlign: "center" }}>
+                            <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>{x.l}</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: x.c, fontFamily: mono }}>{fmt(x.v)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 11, color: C.muted, fontFamily: mono, padding: "8px 0" }}>
+                    Enable to add a second earner. Their income, taxes, and match are computed independently and added to household net.
+                  </div>
+                )}
               </Card>
             </div>
 
@@ -1449,6 +1551,53 @@ export default function CompensationOptimizer() {
                     <span style={{ color: r.c, fontWeight: r.b ? 700 : 400 }}>{r.isPct ? pct(r.v) : fmt(r.v)}</span>
                   </div>
                 ))}
+              </Card>
+
+              <Card style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>Fixed Monthly Costs</div>
+                <Sl label="Mortgage / Rent"   value={mortgage}    min={0} max={15000} step={100} onChange={setMortgage}    color={C.orange} hint="Primary housing payment" />
+                <Sl label="Car Payment 1"     value={carPayment1} min={0} max={2000}  step={50}  onChange={setCarPayment1} color={C.orange} />
+                <Sl label="Car Payment 2"     value={carPayment2} min={0} max={2000}  step={50}  onChange={setCarPayment2} color={C.orange} />
+                <Sl label="Other Fixed Costs" value={otherFixed}  min={0} max={5000}  step={100} onChange={setOtherFixed}  color={C.orange} hint="Insurance, subscriptions, loan payments, etc." />
+                <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "12px 14px", marginTop: 4 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>Total Fixed/mo</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: C.orange, fontFamily: mono }}>{fmt(fixedCostMonthly)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>Annual Obligation</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: C.orange, fontFamily: mono }}>{fmt(fixedCostAnnual)}</div>
+                    </div>
+                  </div>
+                  <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 10, paddingTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>{spouseEnabled ? "HH Net" : "Net"} After Fixed</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: current.discretionary >= 0 ? C.accent : C.red, fontFamily: mono }}>{fmt(current.discretionary)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase" }}>Fixed as % of {spouseEnabled ? "HH " : ""}Net</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: fixedCostAnnual / Math.max(1, current.householdNet) > 0.5 ? C.red : C.mutedLight, fontFamily: mono }}>
+                        {pct(fixedCostAnnual / Math.max(1, current.householdNet))}
+                      </div>
+                    </div>
+                  </div>
+                  {fixedCostAnnual > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <div style={{ height: 6, background: C.muted + "33", borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%",
+                          width: `${Math.min(100, (fixedCostAnnual / Math.max(1, current.householdNet)) * 100)}%`,
+                          background: fixedCostAnnual / Math.max(1, current.householdNet) > 0.5 ? C.red : C.orange,
+                          borderRadius: 3,
+                        }} />
+                      </div>
+                      <div style={{ fontSize: 9, color: C.muted, marginTop: 3, fontFamily: mono }}>
+                        Fixed costs as share of {spouseEnabled ? "household " : ""}net take-home
+                      </div>
+                    </div>
+                  )}
+                </div>
               </Card>
 
               <Card>
