@@ -253,6 +253,116 @@ function sensitivitySweep(key: SweepKey, cfg: UtilCfg, baseParams: UtilParams, c
   });
 }
 
+// ─── Lifetime Simulation Engine ──────────────────────────────────────────────
+
+interface SimYear {
+  age: number;
+  bal401k: number;
+  balRoth: number;
+  balHsa: number;
+  balTaxable: number;
+  total: number;
+  salary: number;
+  ssIncome: number;
+  withdrawal: number;
+  rmd: number;
+  isRetired: boolean;
+}
+
+interface LifetimeInput {
+  currentAge: number;
+  retireAge: number;
+  lifeExpectancy: number;
+  init401k: number;
+  initRoth: number;
+  initHsa: number;
+  initTaxable: number;
+  contrib401k: number;
+  contribMatch: number;
+  contribRoth: number;
+  contribHsa: number;
+  currentNet: number;
+  currentSalary: number;
+  annualSpend: number;
+  salaryGrowthRate: number;
+  inflationRate: number;
+  returnRate: number;
+  ssClaimAge: number;
+  ssAnnual: number;
+  ltcgRate: number;
+}
+
+const RMD_DIVISORS: Record<number, number> = {
+  73:26.5,74:25.5,75:24.6,76:23.7,77:22.9,78:22.0,79:21.1,80:20.2,
+  81:19.4,82:18.5,83:17.7,84:16.8,85:16.0,86:15.2,87:14.4,88:13.7,
+  89:12.9,90:12.2,91:11.5,92:10.8,93:10.1,94:9.5,95:8.9,96:8.4,
+};
+
+function runLifetimeSim(inp: LifetimeInput): SimYear[] {
+  const years: SimYear[] = [];
+  let bal401k = inp.init401k;
+  let balRoth  = inp.initRoth;
+  let balHsa   = inp.initHsa;
+  let balTax   = inp.initTaxable;
+  const r = inp.returnRate;
+
+  for (let i = 0; i <= inp.lifeExpectancy - inp.currentAge; i++) {
+    const age      = inp.currentAge + i;
+    const isRetired = age >= inp.retireAge;
+    const inflFactor  = Math.pow(1 + inp.inflationRate, i);
+    const salaryScale = Math.pow(1 + inp.salaryGrowthRate, i);
+    const salary   = isRetired ? 0 : inp.currentSalary * salaryScale;
+    const ssIncome = age >= inp.ssClaimAge ? inp.ssAnnual * inflFactor : 0;
+
+    // Grow all balances before contributions/withdrawals
+    bal401k *= (1 + r);
+    balRoth  *= (1 + r);
+    balHsa   *= (1 + r);
+    balTax   *= (1 + r * (1 - inp.ltcgRate)); // approximate after-tax LTCG drag on annual gains
+
+    if (!isRetired) {
+      // Contributions scale with salary; HSA stays flat (IRS limits don't auto-grow)
+      bal401k += (inp.contrib401k + inp.contribMatch) * salaryScale;
+      balRoth  += inp.contribRoth * salaryScale;
+      balHsa   += inp.contribHsa;
+      // Net surplus above annual spend flows to taxable brokerage
+      const surplus = Math.max(0, inp.currentNet * inflFactor - inp.annualSpend * inflFactor);
+      balTax += surplus;
+      years.push({
+        age, bal401k, balRoth, balHsa, balTaxable: balTax,
+        total: bal401k + balRoth + balHsa + balTax,
+        salary, ssIncome, withdrawal: 0, rmd: 0, isRetired: false,
+      });
+    } else {
+      // Optimal withdrawal order: HSA (tax-free medical) → Roth → Taxable (LTCG) → 401k (ordinary income)
+      const target  = Math.max(0, inp.annualSpend * inflFactor - ssIncome);
+      const rmdDiv  = RMD_DIVISORS[age];
+      const rmd     = age >= 73 && bal401k > 0 && rmdDiv !== undefined ? bal401k / rmdDiv : 0;
+
+      let need = target;
+      // HSA: assume ~30% of retirement spend is qualified medical (tax-free)
+      const wHsa  = Math.min(balHsa,  Math.min(need * 0.3, need));
+      need -= wHsa;  balHsa  = Math.max(0, balHsa  - wHsa);
+      const wRoth = Math.min(balRoth, need);
+      need -= wRoth; balRoth = Math.max(0, balRoth - wRoth);
+      const wTax  = Math.min(balTax,  need);
+      need -= wTax;  balTax  = Math.max(0, balTax  - wTax);
+      // 401k: satisfy remaining need or forced RMD, whichever is larger
+      const w401k = Math.min(bal401k, Math.max(rmd, need));
+      bal401k = Math.max(0, bal401k - w401k);
+
+      years.push({
+        age, bal401k, balRoth, balHsa, balTaxable: balTax,
+        total: Math.max(0, bal401k + balRoth + balHsa + balTax),
+        salary: 0, ssIncome,
+        withdrawal: wHsa + wRoth + wTax + w401k,
+        rmd, isRetired: true,
+      });
+    }
+  }
+  return years;
+}
+
 // ─── Formatting ───────────────────────────────────────────────────────────────
 
 const fmt  = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n || 0);
@@ -360,6 +470,21 @@ export default function CompensationOptimizer() {
   const [catchup,        setCatchup]   = useState(false);
   const [megaEnabled,    setMegaEnabled] = useState(false);
 
+  // ── Lifetime Simulation ──
+  const [lifeExpectancy, setLifeExpect]   = useState(90);
+  const [salaryGrowth,   setSalaryGrowth] = useState(3);
+  const [annualSpend,    setAnnualSpend]  = useState(120000);
+  const [inflationRate,  setInflation]    = useState(2.5);
+  const [ssClaimAge,     setSsClaimAge]   = useState(67);
+  const [ssBenefit,      setSsBenefit]    = useState(28800);
+  const [bearReturn,     setBearReturn]   = useState(4);
+  const [bullReturn,     setBullReturn]   = useState(10);
+  const [init401k,       setInit401k]     = useState(150000);
+  const [initRoth,       setInitRoth]     = useState(50000);
+  const [initHsa,        setInitHsa]      = useState(15000);
+  const [initTaxable,    setInitTaxable]  = useState(50000);
+  const [ltView,         setLtView]       = useState<"chart" | "table">("chart");
+
   // ── UI ──
   const [tab,        setTab]        = useState("optimizer");
   const [sweepParam, setSweepParam] = useState<SweepKey>("k401");
@@ -459,6 +584,27 @@ export default function CompensationOptimizer() {
     });
   }, [optimized, k401, hsa, fsa, ira, megaBack, current]);
 
+  const lifetimeSims = useMemo(() => {
+    const baseInput: LifetimeInput = {
+      currentAge: age, retireAge: age + retireHorizon, lifeExpectancy,
+      init401k, initRoth, initHsa, initTaxable,
+      contrib401k: k401, contribMatch: matchAmt,
+      contribRoth: ira + megaBack, contribHsa: hsa,
+      currentNet: current.net, currentSalary: base,
+      annualSpend, salaryGrowthRate: salaryGrowth / 100,
+      inflationRate: inflationRate / 100,
+      ssClaimAge, ssAnnual: ssBenefit, ltcgRate: 0.15,
+      returnRate: 0,
+    };
+    return {
+      bear: runLifetimeSim({ ...baseInput, returnRate: bearReturn / 100 }),
+      base: runLifetimeSim({ ...baseInput, returnRate: expectedReturn / 100 }),
+      bull: runLifetimeSim({ ...baseInput, returnRate: bullReturn / 100 }),
+    };
+  }, [age, retireHorizon, lifeExpectancy, init401k, initRoth, initHsa, initTaxable,
+      k401, matchAmt, ira, megaBack, hsa, current.net, base, annualSpend,
+      salaryGrowth, inflationRate, ssClaimAge, ssBenefit, bearReturn, expectedReturn, bullReturn]);
+
   const stateName = statesData[stateCode]?.name ?? stateCode;
 
   const tabs = [
@@ -466,6 +612,7 @@ export default function CompensationOptimizer() {
     { id: "sensitivity", label: "∂ Sensitivity" },
     { id: "paycheck",    label: "⬇ Paychecks" },
     { id: "match",       label: "🏦 401k Match" },
+    { id: "lifetime",    label: "📈 Lifetime" },
     { id: "config",      label: "⚙ Config" },
   ];
 
@@ -1007,6 +1154,227 @@ export default function CompensationOptimizer() {
             </div>
           </div>
         )}
+
+        {/* ══ LIFETIME ══ */}
+        {tab === "lifetime" && (() => {
+          const retireAge = age + retireHorizon;
+          const scenarios = [
+            { key: "bear" as const, label: `Bear ${bearReturn}%`,     color: C.orange, sim: lifetimeSims.bear },
+            { key: "base" as const, label: `Base ${expectedReturn}%`, color: C.blue,   sim: lifetimeSims.base },
+            { key: "bull" as const, label: `Bull ${bullReturn}%`,     color: C.accent, sim: lifetimeSims.bull },
+          ];
+          const portfolioAt = (sim: SimYear[]) => sim.find(y => y.age === retireAge)?.total ?? 0;
+          const depleteAt   = (sim: SimYear[]) => sim.find(y => y.isRetired && y.total <= 0)?.age ?? null;
+          const fiCrossover = (sim: SimYear[], r: number) =>
+            sim.find(y => !y.isRetired && y.salary > 0 && y.total * r >= y.salary)?.age ?? null;
+
+          const fiAge = fiCrossover(lifetimeSims.base, expectedReturn / 100);
+          const basePortfolio = portfolioAt(lifetimeSims.base);
+          const ssAtClaim = ssBenefit * (ssClaimAge === 62 ? 0.70 : ssClaimAge === 70 ? 1.24 : 1.0);
+
+          const W = 520, H = 190;
+          const allTotals = [...lifetimeSims.bear, ...lifetimeSims.base, ...lifetimeSims.bull].map(y => y.total);
+          const maxT = Math.max(...allTotals, 1);
+          const toX = (a: number) => ((a - age) / Math.max(1, lifeExpectancy - age)) * W;
+          const toY = (v: number) => H - (Math.min(v, maxT) / maxT) * (H - 14) - 4;
+          const pts  = (sim: SimYear[]) => sim.map(y => `${toX(y.age).toFixed(1)},${toY(y.total).toFixed(1)}`).join(" ");
+          const retireX = toX(retireAge);
+          const ssX     = toX(ssClaimAge);
+          const fiX     = fiAge !== null ? toX(fiAge) : null;
+          const gridVals = [0.25, 0.5, 0.75, 1.0].map(p => maxT * p);
+
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 16 }}>
+              {/* ── LEFT: Controls ── */}
+              <div>
+                <Card style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Current Balances</div>
+                  <Sl label="401(k) / Traditional"   value={init401k}    min={0} max={2000000} step={5000}  onChange={setInit401k}     color={C.blue} />
+                  <Sl label="Roth IRA + Mega"         value={initRoth}    min={0} max={1000000} step={5000}  onChange={setInitRoth}     color={C.purple} />
+                  <Sl label="HSA"                     value={initHsa}     min={0} max={200000}  step={1000}  onChange={setInitHsa}      color={C.blue} />
+                  <Sl label="Taxable Brokerage"       value={initTaxable} min={0} max={2000000} step={5000}  onChange={setInitTaxable}  color={C.accent} />
+                </Card>
+                <Card style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Life Parameters</div>
+                  <Sl label="Life Expectancy"           value={lifeExpectancy} min={70} max={100} step={1}   onChange={setLifeExpect}    color={C.textDim} fmt={v => `age ${v}`} />
+                  <Sl label="Annual Salary Raises"      value={salaryGrowth}   min={0}  max={10}  step={0.5} onChange={setSalaryGrowth} color={C.textDim} fmt={v => `${v}%`} hint="Nominal raises per year" />
+                  <Sl label="Annual Retirement Spend"   value={annualSpend}    min={30000} max={500000} step={5000} onChange={setAnnualSpend} color={C.accent} hint="Today's dollars — inflation-adjusted" />
+                  <Sl label="Inflation Rate"            value={inflationRate}  min={1} max={6} step={0.5}    onChange={setInflation}    color={C.textDim} fmt={v => `${v}%`} />
+                </Card>
+                <Card style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Social Security</div>
+                  <Sl label="SS Annual Benefit at 67" value={ssBenefit} min={0} max={60000} step={1200} onChange={setSsBenefit} color={C.purple} hint="From SSA.gov your statement" />
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Claim Age</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {([62, 67, 70] as const).map(a => (
+                        <button key={a} onClick={() => setSsClaimAge(a)} style={{
+                          flex: 1, padding: "6px 0", borderRadius: 6, cursor: "pointer", fontFamily: mono, fontSize: 11,
+                          background: ssClaimAge === a ? C.purple + "22" : C.surfaceAlt,
+                          border: `1px solid ${ssClaimAge === a ? C.purple : C.border}`,
+                          color: ssClaimAge === a ? C.purple : C.mutedLight,
+                        }}>Age {a}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 10, color: C.muted, fontFamily: mono, lineHeight: 1.8, background: C.surfaceAlt, padding: "8px 10px", borderRadius: 6 }}>
+                    <span style={{ color: C.orange }}>62:</span> {fmt(ssBenefit * 0.70)}/yr &nbsp;
+                    <span style={{ color: C.blue }}>67:</span> {fmt(ssBenefit)}/yr &nbsp;
+                    <span style={{ color: C.accent }}>70:</span> {fmt(ssBenefit * 1.24)}/yr
+                  </div>
+                </Card>
+                <Card>
+                  <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Scenario Returns</div>
+                  <Sl label="Bear Return" value={bearReturn} min={0} max={8}  step={0.5} onChange={setBearReturn} fmt={v => `${v}%`} color={C.orange} />
+                  <Sl label="Bull Return" value={bullReturn} min={6} max={15} step={0.5} onChange={setBullReturn} fmt={v => `${v}%`} color={C.accent} />
+                  <div style={{ fontSize: 10, color: C.muted, fontFamily: mono }}>Base uses optimizer's {expectedReturn}% expected return</div>
+                </Card>
+              </div>
+
+              {/* ── RIGHT: Chart + Metrics ── */}
+              <div>
+                <Card style={{ marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em" }}>Portfolio · Age {age}–{lifeExpectancy}</div>
+                    <div style={{ display: "flex", gap: 12 }}>
+                      {scenarios.map(s => <span key={s.key} style={{ fontSize: 10, color: s.color, fontFamily: mono }}>── {s.label}</span>)}
+                    </div>
+                  </div>
+                  <svg width={W} height={H + 28} viewBox={`0 0 ${W} ${H + 28}`} style={{ display: "block", width: "100%", overflow: "visible" }}>
+                    {/* Grid lines */}
+                    {gridVals.map(v => (
+                      <g key={v}>
+                        <line x1={0} x2={W} y1={toY(v)} y2={toY(v)} stroke={C.border} strokeWidth={0.5} />
+                        <text x={3} y={toY(v) - 3} fill={C.muted} fontSize={7} fontFamily={mono}>{fmtK(v)}</text>
+                      </g>
+                    ))}
+                    {/* Bull-bear outcome envelope */}
+                    <polygon fill={C.blue + "0e"} points={[
+                      ...lifetimeSims.bull.map(y => `${toX(y.age).toFixed(1)},${toY(y.total).toFixed(1)}`),
+                      ...lifetimeSims.bear.slice().reverse().map(y => `${toX(y.age).toFixed(1)},${toY(y.total).toFixed(1)}`),
+                    ].join(" ")} />
+                    {/* Scenario lines */}
+                    <polyline points={pts(lifetimeSims.bear)} fill="none" stroke={C.orange} strokeWidth={1.5} strokeLinejoin="round" />
+                    <polyline points={pts(lifetimeSims.base)} fill="none" stroke={C.blue}   strokeWidth={2}   strokeLinejoin="round" />
+                    <polyline points={pts(lifetimeSims.bull)} fill="none" stroke={C.accent} strokeWidth={1.5} strokeLinejoin="round" />
+                    {/* Retire marker */}
+                    <line x1={retireX} x2={retireX} y1={0} y2={H} stroke={C.gold} strokeWidth={1} strokeDasharray="5,3" />
+                    <text x={retireX + 3} y={11} fill={C.gold} fontSize={8} fontFamily={mono}>retire {retireAge}</text>
+                    {/* SS marker */}
+                    {ssX >= 0 && ssX <= W && (
+                      <g>
+                        <line x1={ssX} x2={ssX} y1={0} y2={H} stroke={C.purple} strokeWidth={1} strokeDasharray="5,3" />
+                        <text x={ssX + 3} y={24} fill={C.purple} fontSize={8} fontFamily={mono}>SS {ssClaimAge}</text>
+                      </g>
+                    )}
+                    {/* FI crossover marker */}
+                    {fiX !== null && fiX > 0 && fiX < W && (
+                      <g>
+                        <line x1={fiX} x2={fiX} y1={0} y2={H} stroke={C.accent} strokeWidth={1} strokeDasharray="3,3" opacity={0.55} />
+                        <text x={fiX + 3} y={H - 8} fill={C.accent} fontSize={8} fontFamily={mono}>FI {fiAge}</text>
+                      </g>
+                    )}
+                    {/* Zero / baseline */}
+                    <line x1={0} x2={W} y1={H} y2={H} stroke={C.border} strokeWidth={1} />
+                    {/* Age axis labels */}
+                    {Array.from(new Set([age, retireAge, ssClaimAge, lifeExpectancy]))
+                      .filter(a => a >= age && a <= lifeExpectancy)
+                      .map(a => (
+                        <text key={a} x={toX(a)} y={H + 16} fill={C.muted} fontSize={8} fontFamily={mono} textAnchor="middle">{a}</text>
+                      ))}
+                  </svg>
+                </Card>
+
+                {/* Metrics grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }}>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 6 }}>Portfolio at {retireAge}</div>
+                    {scenarios.map(s => (
+                      <div key={s.key} style={{ fontSize: 11, color: s.color, fontFamily: mono }}>{s.label.split(" ")[0]}: {fmtK(portfolioAt(s.sim))}</div>
+                    ))}
+                  </div>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>FI Crossover (Base)</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: fiAge ? C.accent : C.muted, fontFamily: mono }}>
+                      {fiAge ? `Age ${fiAge}` : "—"}
+                    </div>
+                    <div style={{ fontSize: 10, color: C.mutedLight }}>
+                      {fiAge ? `${fiAge - age} yrs from now` : "Investment income never exceeds salary in range"}
+                    </div>
+                  </div>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 6 }}>Survivability to {lifeExpectancy}</div>
+                    {scenarios.map(s => {
+                      const dep = depleteAt(s.sim);
+                      return (
+                        <div key={s.key} style={{ fontSize: 11, color: dep ? C.red : s.color, fontFamily: mono }}>
+                          {s.label.split(" ")[0]}: {dep ? `depletes age ${dep}` : `✓ survives`}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>Sustainable Income (Base, 4% SWR)</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: C.accent, fontFamily: mono }}>{fmt(basePortfolio * 0.04)}</div>
+                    <div style={{ fontSize: 10, color: C.mutedLight, fontFamily: mono }}>
+                      + {fmt(ssAtClaim)} SS (age {ssClaimAge}) = <span style={{ color: C.accent }}>{fmt(basePortfolio * 0.04 + ssAtClaim)}</span> total
+                    </div>
+                  </div>
+                  <div style={{ background: C.surfaceAlt, borderRadius: 8, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, color: C.muted, fontFamily: mono, textTransform: "uppercase", marginBottom: 4 }}>Annual Contributions (current)</div>
+                    <div style={{ fontSize: 11, color: C.blue,   fontFamily: mono }}>401k+match: {fmt(k401 + matchAmt)}</div>
+                    <div style={{ fontSize: 11, color: C.purple, fontFamily: mono }}>Roth+Mega: {fmt(ira + megaBack)}</div>
+                    <div style={{ fontSize: 11, color: C.blue,   fontFamily: mono }}>HSA: {fmt(hsa)}</div>
+                    <div style={{ fontSize: 11, color: C.accent, fontFamily: mono }}>Taxable surplus: {fmt(Math.max(0, current.net - annualSpend))}</div>
+                  </div>
+                </div>
+
+                {/* Year-by-year table */}
+                <Card>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 11, color: C.mutedLight, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.1em" }}>Year-by-Year (Base Scenario)</div>
+                    <button onClick={() => setLtView(ltView === "chart" ? "table" : "chart")}
+                      style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, color: C.mutedLight, fontFamily: mono, fontSize: 10, padding: "3px 10px", borderRadius: 4, cursor: "pointer" }}>
+                      {ltView === "chart" ? "Show Table ↓" : "Hide Table ↑"}
+                    </button>
+                  </div>
+                  {ltView === "table" && (
+                    <div style={{ overflowX: "auto", maxHeight: 400, overflowY: "auto" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: mono, fontSize: 10 }}>
+                        <thead style={{ position: "sticky", top: 0, background: C.surface }}>
+                          <tr>
+                            {["Age","Total","401k","Roth","HSA","Taxable","SS Income","Withdrawal"].map(h => (
+                              <th key={h} style={{ textAlign: "right", padding: "4px 8px", color: C.muted, fontWeight: 400, borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap", fontSize: 9 }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {lifetimeSims.base.map((y, i) => (
+                            <tr key={y.age} style={{ background: y.age === retireAge ? C.goldDim + "22" : y.age === ssClaimAge ? C.purpleDim + "22" : i % 2 === 0 ? "transparent" : C.surfaceAlt + "44" }}>
+                              <td style={{ padding: "3px 8px", color: y.isRetired ? C.gold : y.age === fiAge ? C.accent : C.textDim, fontWeight: y.age === retireAge ? 700 : 400 }}>
+                                {y.age}{y.age === retireAge ? " ★" : y.age === ssClaimAge ? " $" : ""}
+                              </td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: y.total > 0 ? C.text : C.red, fontWeight: 600 }}>{fmtK(y.total)}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: C.blue   }}>{fmtK(y.bal401k)}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: C.purple }}>{fmtK(y.balRoth)}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: C.blue   }}>{fmtK(y.balHsa)}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: C.accent }}>{fmtK(y.balTaxable)}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: C.purple }}>{y.ssIncome > 0 ? fmtK(y.ssIncome) : "—"}</td>
+                              <td style={{ padding: "3px 8px", textAlign: "right", color: y.withdrawal > 0 ? C.orange : C.muted }}>{y.withdrawal > 0 ? fmtK(y.withdrawal) : "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ══ CONFIG ══ */}
         {tab === "config" && (
