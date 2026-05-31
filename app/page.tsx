@@ -36,6 +36,34 @@ const tools: Array<{ slug: string; name: string; description: string; status: "b
       "Wash-sale-aware harvest modeling: select losing positions, IRS netting order, replacement ETF suggestions, and NPV of tax deferral alpha.",
     status: "built" as const,
   },
+  {
+    slug: "roth-conversion",
+    name: "Roth Conversion Optimizer",
+    description:
+      "Fill brackets optimally with a visual income-stacking bar, multi-year conversion plan, Trad vs Roth FV projection, and IRMAA Medicare tier analysis.",
+    status: "built" as const,
+  },
+  {
+    slug: "asset-location",
+    name: "Asset Location Optimizer",
+    description:
+      "Tax drag calculator across 8 asset classes, account allocation optimizer, drag analysis with compounding impact table, and prioritized rebalancing plan.",
+    status: "built" as const,
+  },
+  {
+    slug: "solo-401k",
+    name: "Solo 401(k) Calculator",
+    description:
+      "Self-employment contribution limits, SE tax math, employee + employer optimizer, and Solo 401k vs SEP-IRA comparison with multi-year projection.",
+    status: "built" as const,
+  },
+  {
+    slug: "cap-gains-harvester",
+    name: "Capital Gains Harvester",
+    description:
+      "Harvest long-term gains at 0% in the 15% bracket with income stacking visualization, basis step-up strategies, and multi-year harvest planning.",
+    status: "built" as const,
+  },
 ];
 
 export default function Home() {
