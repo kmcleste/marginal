@@ -20,7 +20,7 @@ interface StateEntry {
   surtax?: { threshold: number; rate: number; description: string };
 }
 
-const statesData = statesRaw as Record<string, StateEntry>;
+const statesData = statesRaw as unknown as Record<string, StateEntry>;
 
 const STATE_OPTIONS = Object.entries(statesData)
   .filter(([k]) => k !== "_meta")
